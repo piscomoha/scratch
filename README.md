@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Application de Suivi des Stagiaires OFPPT
 
 Application web complète développée avec Laravel 11 et React.js permettant la gestion numérique des stagiaires.
@@ -49,3 +50,6 @@ L'application a été remplie avec des données marocaines factices :
 ## 👨‍💻 Auteur
 
 Développé par **Mohammed Saide** (Stagiaire Développement Digital - OFPPT).
+=======
+# scratch
+>>>>>>> 909f929d1e6439f13f73f4d53306bba956952a1e
