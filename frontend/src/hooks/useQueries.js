@@ -83,3 +83,27 @@ export const useDashboardStats = () => {
     },
   });
 };
+
+// --- Formateurs & Affectations ---
+export const useFormateurs = () => {
+  return useQuery({
+    queryKey: ['formateurs'],
+    queryFn: async () => {
+      const { data } = await api.get('/users/formateurs');
+      return data.data;
+    },
+  });
+};
+
+export const useUpdateAffectations = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload) => {
+      const { data } = await api.post('/affectations', payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['formateurs'] });
+    },
+  });
+};

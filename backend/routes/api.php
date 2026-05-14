@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\PresenceController;
 use App\Http\Controllers\Api\StageController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FiliereModuleController;
+use App\Http\Controllers\Api\AffectationController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -47,6 +49,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/stagiaires', [StagiaireController::class, 'store']);
         Route::put('/stagiaires/{stagiaire}', [StagiaireController::class, 'update']);
         Route::delete('/stagiaires/{stagiaire}', [StagiaireController::class, 'destroy']);
+
+        // Affectations
+        Route::get('/affectations', [AffectationController::class, 'index']);
+        Route::get('/affectations/user/{user}', [AffectationController::class, 'show']);
+        Route::post('/affectations', [AffectationController::class, 'store']);
+        Route::delete('/affectations/{id}', [AffectationController::class, 'destroy']);
+
+        // Users
+        Route::get('/users', [UserController::class, 'index']);
+        Route::get('/users/formateurs', [UserController::class, 'formateurs']);
     });
 
     // Notes

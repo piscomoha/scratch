@@ -1,11 +1,11 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { FiX } from 'react-icons/fi';
+import { X } from 'lucide-react';
 
 const Modal = ({ isOpen, closeModal, title, children, maxWidth = 'max-w-2xl' }) => {
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={closeModal}>
+      <Dialog as="div" className="relative z-[100]" onClose={closeModal}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -15,7 +15,7 @@ const Modal = ({ isOpen, closeModal, title, children, maxWidth = 'max-w-2xl' }) 
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -23,26 +23,26 @@ const Modal = ({ isOpen, closeModal, title, children, maxWidth = 'max-w-2xl' }) 
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
+              enterFrom="opacity-0 scale-95 translate-y-4"
+              enterTo="opacity-100 scale-100 translate-y-0"
               leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+              leaveFrom="opacity-100 scale-100 translate-y-0"
+              leaveTo="opacity-0 scale-95 translate-y-4"
             >
-              <Dialog.Panel className={`w-full ${maxWidth} transform rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all`}>
-                <div className="flex items-center justify-between mb-5">
-                  <Dialog.Title as="h3" className="text-xl font-bold text-gray-900">
+              <Dialog.Panel className={`w-full ${maxWidth} transform rounded-[2rem] glass p-8 text-left align-middle shadow-2xl transition-all border border-white/10`}>
+                <div className="flex items-center justify-between mb-6">
+                  <Dialog.Title as="h3" className="text-2xl font-bold text-white tracking-tight">
                     {title}
                   </Dialog.Title>
                   <button
                     onClick={closeModal}
-                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                    className="p-2.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
                   >
-                    <FiX size={20} />
+                    <X size={20} />
                   </button>
                 </div>
                 
-                <div className="mt-2">
+                <div className="relative">
                   {children}
                 </div>
               </Dialog.Panel>
@@ -55,3 +55,4 @@ const Modal = ({ isOpen, closeModal, title, children, maxWidth = 'max-w-2xl' }) 
 };
 
 export default Modal;
+

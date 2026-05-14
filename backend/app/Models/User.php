@@ -60,4 +60,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Presence::class, 'formateur_id');
     }
+
+    public function affectations()
+    {
+        return $this->hasMany(Affectation::class);
+    }
 }

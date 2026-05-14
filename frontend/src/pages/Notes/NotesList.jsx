@@ -1,19 +1,123 @@
 import { useState, useEffect } from 'react';
 import { useFilieres } from '../../hooks/useQueries';
 import { useAuth } from '../../context/AuthContext';
-import { FiSave, FiAlertCircle, FiDownload } from 'react-icons/fi';
+import { Save, AlertCircle, Download, FileText, BookOpen, GraduationCap, Users, Loader2, Shield, Building, MapPin, Briefcase, Phone, Mail, X, Info } from 'lucide-react';
 import api from '../../api/axios';
-import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import CustomSelect from '../../components/ui/CustomSelect';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNotification } from '../../context/NotificationContext';
+
+const StageInfoModal = ({ stage, isOpen, onClose }) => {
+  if (!isOpen || !stage) return null;
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-background/80 backdrop-blur-md"
+      />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        className="relative w-full max-w-xl glass rounded-[3rem] p-10 border border-border shadow-2xl overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 p-12 opacity-[0.03] text-primary rotate-12 pointer-events-none">
+          <Building size={200} />
+        </div>
+
+        <button 
+          onClick={onClose}
+          className="absolute top-8 right-8 p-3 rounded-2xl hover:bg-overlay-hover text-500 transition-colors z-10"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="flex items-center gap-6 mb-10 relative z-10">
+          <div className="h-16 w-16 rounded-3xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-black text-2xl shadow-lg">
+            <Building size={28} />
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-100">{stage.entreprise_nom}</h2>
+            <p className="text-amber-500 font-bold tracking-widest uppercase text-[10px] mt-1">Détails du Stage</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-8 relative z-10">
+          <div className="space-y-6">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-500 flex items-center gap-2">
+                <Briefcase size={12} className="text-amber-500" /> Secteur
+              </label>
+              <p className="text-sm font-bold text-100">{stage.entreprise_secteur || 'Non spécifié'}</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-500 flex items-center gap-2">
+                <MapPin size={12} className="text-amber-500" /> Ville
+              </label>
+              <p className="text-sm font-bold text-100">{stage.entreprise_ville || 'Non spécifiée'}</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-500 flex items-center gap-2">
+                <AlertCircle size={12} className="text-amber-500" /> Durée
+              </label>
+              <p className="text-sm font-bold text-100">{stage.duree_semaines} Semaines</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-500 flex items-center gap-2">
+                <Users size={12} className="text-amber-500" /> Responsable
+              </label>
+              <p className="text-sm font-bold text-100">{stage.responsable_nom || 'Non spécifié'}</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-500 flex items-center gap-2">
+                <Phone size={12} className="text-amber-500" /> Téléphone
+              </label>
+              <p className="text-sm font-bold text-100">{stage.responsable_telephone || 'Non spécifié'}</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-widest text-500 flex items-center gap-2">
+                <Mail size={12} className="text-amber-500" /> Email
+              </label>
+              <p className="text-sm font-bold text-100 truncate">{stage.responsable_email || 'Non spécifié'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-10 pt-8 border-t border-border flex justify-between items-center relative z-10">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-500 block mb-1">Période</span>
+            <p className="text-xs font-black text-100">
+              {stage.date_debut ? new Date(stage.date_debut).toLocaleDateString() : '??'} 
+              <span className="mx-2 text-500">→</span> 
+              {stage.date_fin ? new Date(stage.date_fin).toLocaleDateString() : '??'}
+            </p>
+          </div>
+          <div className="px-5 py-2 rounded-xl bg-amber-500/10 text-amber-500 font-black text-[10px] uppercase tracking-widest border border-amber-500/10">
+            {stage.statut}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 const NotesList = () => {
   const { user } = useAuth();
+  const { notify } = useNotification();
   const [filiereId, setFiliereId] = useState('');
   const [groupe, setGroupe] = useState('');
   const [moduleId, setModuleId] = useState('');
   const [semestre, setSemestre] = useState('1');
   const [annee, setAnnee] = useState('2024-2025');
+  const [selectedStage, setSelectedStage] = useState(null);
   
   const [modules, setModules] = useState([]);
   const [stagiaires, setStagiaires] = useState([]);
@@ -22,7 +126,6 @@ const NotesList = () => {
 
   const { data: filieres } = useFilieres();
 
-  // Charger les modules quand la filière change
   useEffect(() => {
     if (filiereId) {
       api.get(`/modules?filiere_id=${filiereId}`).then(({ data }) => setModules(data.data));
@@ -33,54 +136,77 @@ const NotesList = () => {
 
   const chargerStagiairesEtNotes = async () => {
     if (!filiereId || !groupe || !moduleId || !semestre) {
-      toast.error('Veuillez remplir tous les filtres');
+      notify('error', 'Filtres incomplets', 'Veuillez remplir tous les filtres pour afficher la liste.');
       return;
     }
 
     setLoading(true);
     try {
-      // 1. Charger les stagiaires de ce groupe
       const stagsRes = await api.get(`/stagiaires?filiere_id=${filiereId}&groupe=${groupe}&per_page=100`);
       const stags = stagsRes.data.data;
       
-      // 2. Charger les notes existantes
       const notesRes = await api.get(`/notes?module_id=${moduleId}&semestre=${semestre}&annee_scolaire=${annee}`);
       const notesExistantes = notesRes.data.data;
 
-      // 3. Préparer le formulaire
       const formData = {};
       stags.forEach(stag => {
         const existingNote = notesExistantes.find(n => n.stagiaire_id === stag.id);
         formData[stag.id] = {
           id: existingNote?.id || null,
-          note_controle: existingNote?.note_controle ?? '',
+          note_controle_1: existingNote?.note_controle_1 ?? '',
+          note_controle_2: existingNote?.note_controle_2 ?? '',
+          note_controle_3: existingNote?.note_controle_3 ?? '',
           note_synthese: existingNote?.note_synthese ?? '',
+          note_stage: existingNote?.note_stage ?? '',
           note_finale: existingNote?.note_finale ?? null,
-          isDirty: false
+          isDirty: false,
+          annee_formation: stag.annee_formation,
+          stage_info: stag.stage
         };
       });
 
       setStagiaires(stags);
       setNotesForm(formData);
     } catch (error) {
-      toast.error('Erreur lors du chargement des données');
+      notify('error', 'Erreur de chargement', 'Impossible de récupérer les notes des stagiaires.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleNoteChange = (stagiaireId, field, value) => {
-    // Validation : que des nombres entre 0 et 20
     if (value !== '' && (isNaN(value) || value < 0 || value > 20)) return;
 
-    setNotesForm(prev => ({
-      ...prev,
-      [stagiaireId]: {
-        ...prev[stagiaireId],
-        [field]: value,
-        isDirty: true
+    setNotesForm(prev => {
+      const current = prev[stagiaireId];
+      const nextData = { ...current, [field]: value, isDirty: true };
+      
+      const ccs = [
+        field === 'note_controle_1' ? value : current.note_controle_1,
+        field === 'note_controle_2' ? value : current.note_controle_2,
+        field === 'note_controle_3' ? value : current.note_controle_3
+      ].filter(v => v !== '');
+      
+      const ef = field === 'note_synthese' ? value : current.note_synthese;
+      const stage = field === 'note_stage' ? value : current.note_stage;
+      
+      if (ccs.length > 0 && ef !== '') {
+        const moyCC = ccs.reduce((a, b) => Number(a) + Number(b), 0) / ccs.length;
+        
+        if (current.annee_formation === 2 && stage !== '') {
+          const efm = (Number(ef) + Number(stage)) / 2;
+          nextData.note_finale = Math.round((moyCC * 0.4 + efm * 0.6) * 100) / 100;
+        } else if (current.annee_formation !== 2) {
+          nextData.note_finale = Math.round((moyCC * 0.4 + Number(ef) * 0.6) * 100) / 100;
+        } else {
+          nextData.note_finale = null;
+        }
+      } else {
+        nextData.note_finale = null;
       }
-    }));
+      
+      return { ...prev, [stagiaireId]: nextData };
+    });
   };
 
   const sauvegarderNotes = async () => {
@@ -88,13 +214,11 @@ const NotesList = () => {
       .filter(([_, data]) => data.isDirty)
       .map(([stagiaireId, data]) => ({
         stagiaireId,
-        id: data.id,
-        note_controle: data.note_controle,
-        note_synthese: data.note_synthese,
+        ...data
       }));
 
     if (notesToSave.length === 0) {
-      toast.success('Aucune modification à sauvegarder');
+      notify('info', 'Aucun changement', 'Aucune modification à sauvegarder.');
       return;
     }
 
@@ -102,14 +226,17 @@ const NotesList = () => {
     let successCount = 0;
     
     for (const note of notesToSave) {
-      if (note.note_controle === '' || note.note_synthese === '') continue;
+      if (note.note_controle_1 === '' || note.note_synthese === '') continue;
 
       try {
         const payload = {
           stagiaire_id: note.stagiaireId,
           module_id: moduleId,
-          note_controle: note.note_controle,
+          note_controle_1: note.note_controle_1,
+          note_controle_2: note.note_controle_2,
+          note_controle_3: note.note_controle_3,
           note_synthese: note.note_synthese,
+          note_stage: note.note_stage || null,
           annee_scolaire: annee,
           semestre: semestre
         };
@@ -126,8 +253,10 @@ const NotesList = () => {
     }
 
     setLoading(false);
-    toast.success(`${successCount} notes enregistrées`);
-    chargerStagiairesEtNotes(); // Recharger pour avoir les notes finales calculées
+    if (successCount > 0) {
+      notify('success', 'Notes enregistrées', `${successCount} notes ont été mises à jour.`);
+      chargerStagiairesEtNotes();
+    }
   };
 
   const exportExcel = () => {
@@ -138,8 +267,11 @@ const NotesList = () => {
     const exportData = stagiaires.map(stag => ({
       'Code Massar': stag.code_massar,
       'Nom Complet': stag.nom_complet,
-      'Note Contrôle Continu (40%)': notesForm[stag.id]?.note_controle,
-      'Note Synthèse (60%)': notesForm[stag.id]?.note_synthese,
+      'CC1': notesForm[stag.id]?.note_controle_1,
+      'CC2': notesForm[stag.id]?.note_controle_2,
+      'CC3': notesForm[stag.id]?.note_controle_3,
+      'Synthèse': notesForm[stag.id]?.note_synthese,
+      'Stage': notesForm[stag.id]?.note_stage,
       'Note Finale': notesForm[stag.id]?.note_finale || 'Non calculée'
     }));
 
@@ -149,18 +281,35 @@ const NotesList = () => {
     XLSX.writeFile(wb, `Notes_${moduleSelectionne}_${groupe}.xlsx`);
   };
 
+  const isAnnee2 = stagiaires.some(s => s.annee_formation === 2);
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-primary">Saisie des Notes</h1>
-        <p className="text-gray-500 mt-1">Gestion des évaluations et relevés de notes</p>
+    <div className="space-y-8 pb-10">
+      <AnimatePresence>
+        {selectedStage && (
+          <StageInfoModal 
+            stage={selectedStage} 
+            isOpen={!!selectedStage} 
+            onClose={() => setSelectedStage(null)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-100 mb-2">Gestion des Notes</h1>
+          <p className="text-500 font-medium">Saisie des évaluations (CC & Synthèse) avec calcul automatique</p>
+        </div>
       </div>
 
-      {/* Zone de sélection */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Filière</label>
+      <div className="glass rounded-[2.5rem] p-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-8 opacity-[0.03] text-primary rotate-12 pointer-events-none">
+          <BookOpen size={180} />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 relative z-10">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Filière</label>
             <CustomSelect
               options={[
                 { value: '', label: 'Sélectionner' },
@@ -168,16 +317,24 @@ const NotesList = () => {
               ]}
               value={filiereId}
               onChange={setFiliereId}
-              placeholder="Sélectionner"
+              placeholder="Filière"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Groupe</label>
-            <input type="text" placeholder="Ex: DEV101" className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              value={groupe} onChange={(e) => setGroupe(e.target.value.toUpperCase())} />
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Groupe</label>
+            <div className="relative group">
+              <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
+              <input 
+                type="text" 
+                placeholder="Ex: DEV201" 
+                className="w-full bg-input border border-border rounded-xl py-2.5 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-500"
+                value={groupe} 
+                onChange={(e) => setGroupe(e.target.value.toUpperCase())} 
+              />
+            </div>
           </div>
-          <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Semestre</label>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Semestre</label>
             <CustomSelect
               options={[
                 { value: '1', label: 'Semestre 1' },
@@ -187,12 +344,15 @@ const NotesList = () => {
               onChange={setSemestre}
             />
           </div>
-          <div className="md:col-span-2 w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Module</label>
+          <div className="md:col-span-2 space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Module</label>
             <CustomSelect
               options={[
                 { value: '', label: 'Sélectionner un module' },
-                ...modules.map(m => ({ value: m.id, label: `${m.code} - ${m.intitule}` }))
+                ...modules.map(m => ({ 
+                  value: m.id, 
+                  label: `${m.code} - ${m.intitule}${m.is_regional ? ' (RÉGIONAL)' : ''}` 
+                }))
               ]}
               value={moduleId}
               onChange={setModuleId}
@@ -202,86 +362,178 @@ const NotesList = () => {
           </div>
         </div>
         
-        <div className="mt-4 flex justify-end">
-          <button onClick={chargerStagiairesEtNotes} disabled={loading}
-            className="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg font-medium transition-colors">
-            {loading ? 'Chargement...' : 'Afficher la liste'}
+        <div className="mt-10 pt-8 border-t border-border flex justify-end">
+          <button 
+            onClick={chargerStagiairesEtNotes} 
+            disabled={loading}
+            className="group relative overflow-hidden bg-primary text-white px-12 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/30 disabled:opacity-50 flex items-center gap-3"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BookOpen size={20} className="group-hover:rotate-12 transition-transform" />}
+            Afficher la liste
           </button>
         </div>
       </div>
 
-      {/* Tableau de saisie */}
-      {stagiaires.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-            <div className="flex items-center gap-2 text-primary font-medium">
-              <FiAlertCircle className="text-secondary" />
-              La note finale est calculée automatiquement par le système (CC 40%, EF 60%).
-            </div>
-            <div className="flex gap-2">
-              <button onClick={exportExcel}
-                className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg hover:bg-green-100 transition-colors">
-                <FiDownload /> Export Excel
-              </button>
-              {(user?.role === 'admin' || user?.role === 'formateur') && (
-                <button onClick={sauvegarderNotes} disabled={loading}
-                  className="flex items-center gap-2 text-white bg-secondary px-6 py-2 rounded-lg hover:bg-secondary-dark transition-colors">
-                  <FiSave /> Sauvegarder
+      <AnimatePresence mode="wait">
+        {stagiaires.length > 0 ? (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="glass rounded-[2.5rem] overflow-hidden flex flex-col"
+          >
+            <div className="p-6 border-b border-border flex flex-col md:flex-row justify-between items-center bg-overlay gap-6">
+              <div className="flex flex-col md:flex-row items-center gap-3">
+                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary-light">
+                  <AlertCircle size={18} className="text-primary" />
+                  <span className="text-xs font-bold uppercase tracking-widest">
+                    {isAnnee2 ? 'Calcul (2A) : (CC × 0.4) + ((EFM + Stage)/2 × 0.6)' : 'Calcul (1A) : (CC × 0.4) + (EFM × 0.6)'}
+                  </span>
+                </div>
+                {modules.find(m => m.id === Number(moduleId))?.is_regional && (
+                  <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500">
+                    <Shield size={18} className="text-amber-500" />
+                    <span className="text-xs font-bold uppercase tracking-widest italic">Module Régional</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={exportExcel}
+                  className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-6 py-3 rounded-2xl hover:bg-emerald-500/20 transition-all font-bold text-sm border border-emerald-500/20"
+                >
+                  <Download size={18} /> Export Excel
                 </button>
-              )}
+                {(user?.role === 'admin' || user?.role === 'formateur') && (
+                  <button 
+                    onClick={sauvegarderNotes} 
+                    disabled={loading}
+                    className="flex items-center gap-2 text-white bg-primary px-8 py-3 rounded-2xl hover:bg-primary/90 transition-all font-bold text-sm shadow-lg shadow-primary/20"
+                  >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save size={18} />}
+                    Sauvegarder
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-white border-b border-gray-200 text-sm">
-                  <th className="py-3 px-4 text-gray-500 font-semibold w-16">N°</th>
-                  <th className="py-3 px-4 text-gray-500 font-semibold">Stagiaire</th>
-                  <th className="py-3 px-4 text-gray-500 font-semibold w-40 text-center">Note CC (/20)</th>
-                  <th className="py-3 px-4 text-gray-500 font-semibold w-40 text-center">Note EF (/20)</th>
-                  <th className="py-3 px-4 text-gray-500 font-semibold w-32 text-center bg-gray-50">Note Finale</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stagiaires.map((stag, i) => {
-                  const data = notesForm[stag.id] || {};
-                  return (
-                    <tr key={stag.id} className={`border-b border-gray-100 ${data.isDirty ? 'bg-orange-50/30' : 'hover:bg-slate-50'}`}>
-                      <td className="py-3 px-4 text-gray-500">{i + 1}</td>
-                      <td className="py-3 px-4">
-                        <div className="font-semibold text-gray-800">{stag.nom_complet}</div>
-                        <div className="text-xs text-gray-500">{stag.code_massar}</div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <input type="number" step="0.25" min="0" max="20"
-                          disabled={user?.role === 'stagiaire'}
-                          className={`w-full text-center py-2 px-3 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all ${data.note_controle === '' ? 'border-gray-300' : 'border-green-300 bg-green-50/30'}`}
-                          value={data.note_controle}
-                          onChange={(e) => handleNoteChange(stag.id, 'note_controle', e.target.value)}
-                        />
-                      </td>
-                      <td className="py-3 px-4">
-                        <input type="number" step="0.25" min="0" max="20"
-                          disabled={user?.role === 'stagiaire'}
-                          className={`w-full text-center py-2 px-3 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all ${data.note_synthese === '' ? 'border-gray-300' : 'border-green-300 bg-green-50/30'}`}
-                          value={data.note_synthese}
-                          onChange={(e) => handleNoteChange(stag.id, 'note_synthese', e.target.value)}
-                        />
-                      </td>
-                      <td className="py-3 px-4 bg-gray-50 text-center">
-                        <div className="font-bold text-lg text-primary">
-                          {data.note_finale !== null ? data.note_finale : '-'}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-overlay border-b border-border">
+                    <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] w-16">#</th>
+                    <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] min-w-[200px]">Stagiaire</th>
+                    <th className="py-5 px-4 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center">CC1</th>
+                    <th className="py-5 px-4 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center">CC2</th>
+                    <th className="py-5 px-4 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center">CC3</th>
+                    <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center">EFM (Synt.)</th>
+                    {isAnnee2 && <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center">Stage</th>}
+                    <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center bg-overlay">Finale</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {stagiaires.map((stag, i) => {
+                    const data = notesForm[stag.id] || {};
+                    return (
+                      <motion.tr 
+                        key={stag.id} 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.03 }}
+                        className={`group transition-all duration-300 ${data.isDirty ? 'bg-primary/[0.03]' : 'hover:bg-overlay'}`}
+                      >
+                        <td className="py-4 px-8 text-500 font-bold text-sm">{i + 1}</td>
+                        <td className="py-4 px-8">
+                          <div className="flex items-center gap-3 group/name">
+                            <div>
+                              <div className="font-bold text-100 group-hover:text-primary transition-colors">{stag.nom_complet}</div>
+                              <div className="text-[10px] uppercase font-bold tracking-widest text-500 mt-1">{stag.code_massar}</div>
+                            </div>
+                            {stag.stage && (
+                              <button 
+                                onClick={() => setSelectedStage(stag.stage)}
+                                className="p-2 rounded-lg bg-amber-500/10 text-amber-500 opacity-60 hover:opacity-100 transition-all hover:bg-amber-500/20"
+                                title="Infos Stage"
+                              >
+                                <Building size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <input 
+                            type="number" step="0.25" min="0" max="20"
+                            disabled={user?.role === 'stagiaire'}
+                            className={`w-16 mx-auto block text-center py-2 px-2 bg-input border rounded-lg text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_1 === '' ? 'border-border' : 'border-primary/40'}`}
+                            value={data.note_controle_1}
+                            onChange={(e) => handleNoteChange(stag.id, 'note_controle_1', e.target.value)}
+                          />
+                        </td>
+                        <td className="py-4 px-4">
+                          <input 
+                            type="number" step="0.25" min="0" max="20"
+                            disabled={user?.role === 'stagiaire'}
+                            className={`w-16 mx-auto block text-center py-2 px-2 bg-input border rounded-lg text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_2 === '' ? 'border-border' : 'border-primary/40'}`}
+                            value={data.note_controle_2}
+                            onChange={(e) => handleNoteChange(stag.id, 'note_controle_2', e.target.value)}
+                          />
+                        </td>
+                        <td className="py-4 px-4">
+                          <input 
+                            type="number" step="0.25" min="0" max="20"
+                            disabled={user?.role === 'stagiaire'}
+                            className={`w-16 mx-auto block text-center py-2 px-2 bg-input border rounded-lg text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_3 === '' ? 'border-border' : 'border-primary/40'}`}
+                            value={data.note_controle_3}
+                            onChange={(e) => handleNoteChange(stag.id, 'note_controle_3', e.target.value)}
+                          />
+                        </td>
+                        <td className="py-4 px-8">
+                          <input 
+                            type="number" step="0.25" min="0" max="20"
+                            disabled={user?.role === 'stagiaire'}
+                            className={`w-24 mx-auto block text-center py-2.5 px-4 bg-input border rounded-xl text-sm font-bold text-100 transition-all focus:outline-none focus:ring-4 focus:ring-primary/20 ${data.note_synthese === '' ? 'border-border' : 'border-primary/40 bg-primary/5'}`}
+                            value={data.note_synthese}
+                            onChange={(e) => handleNoteChange(stag.id, 'note_synthese', e.target.value)}
+                          />
+                        </td>
+                        {isAnnee2 && (
+                          <td className="py-4 px-8">
+                            <input 
+                              type="number" step="0.25" min="0" max="20"
+                              disabled={user?.role === 'stagiaire'}
+                              className={`w-24 mx-auto block text-center py-2.5 px-4 bg-input border rounded-xl text-sm font-bold text-100 transition-all focus:outline-none focus:ring-4 focus:ring-primary/20 ${data.note_stage === '' ? 'border-border' : 'border-amber-500/40 bg-amber-500/5'}`}
+                              value={data.note_stage}
+                              onChange={(e) => handleNoteChange(stag.id, 'note_stage', e.target.value)}
+                            />
+                          </td>
+                        )}
+                        <td className="py-4 px-8 bg-overlay text-center">
+                          <div className={`text-xl font-black ${data.note_finale !== null ? (data.note_finale >= 10 ? 'text-emerald-400' : 'text-rose-400') : 'text-500'}`}>
+                            {data.note_finale !== null ? data.note_finale : '--'}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="glass rounded-[2.5rem] p-20 text-center"
+          >
+            <div className="flex flex-col items-center gap-4 opacity-30">
+              <Users size={64} />
+              <p className="font-bold uppercase tracking-[0.2em] text-xs">Aucun stagiaire trouvé. Ajustez vos filtres.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

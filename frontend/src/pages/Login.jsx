@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import toast from 'react-hot-toast';
+import { useNotification } from '../context/NotificationContext';
+import { motion } from 'framer-motion';
+import { Mail, Lock, Loader2 } from 'lucide-react';
+import logo from '../assets/ofppt_logo.png';
 
 const Login = () => {
   const { login, isAuthenticated } = useAuth();
+  const { notify } = useNotification();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -19,62 +23,106 @@ const Login = () => {
     const result = await login(data.email, data.password);
     
     if (result.success) {
-      toast.success('Connexion réussie');
+      notify('success', 'Connexion réussie', `Bienvenue ${result.user?.name || ''}, ravi de vous revoir !`);
       navigate(result.role === 'stagiaire' ? '/stagiaires' : '/dashboard');
     } else {
-      toast.error(result.message);
+      notify('error', 'Échec de connexion', result.message || 'Vérifiez vos identifiants');
     }
     setLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-secondary rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+      {/* Dynamic Background Elements */}
+      <motion.div 
+        animate={{ 
+          scale: [1, 1.2, 1],
+          opacity: [0.1, 0.2, 0.1],
+        }}
+        transition={{ duration: 8, repeat: Infinity }}
+        className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/30 rounded-full filter blur-[120px]"
+      />
+      <motion.div 
+        animate={{ 
+          scale: [1, 1.3, 1],
+          opacity: [0.1, 0.15, 0.1],
+        }}
+        transition={{ duration: 10, repeat: Infinity, delay: 1 }}
+        className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-secondary/20 rounded-full filter blur-[120px]"
+      />
 
-      <div className="max-w-md w-full glass-panel rounded-2xl p-8 relative z-10">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="max-w-md w-full glass rounded-[2.5rem] p-10 relative z-10 shadow-2xl"
+      >
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-black text-primary mb-2">
-            <span className="text-secondary">OFPPT</span> Hub
+          <div className="inline-flex mb-6 relative group">
+            <div className="absolute -inset-2 bg-gradient-to-r from-primary to-secondary rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+            <img 
+              src={logo} 
+              alt="OFPPT Logo" 
+              className="relative h-24 w-24 object-contain drop-shadow-2xl" 
+            />
+          </div>
+          <h1 className="text-4xl font-black tracking-tight text-100 mb-2">
+            OFPPT <span className="text-gradient">Hub</span>
           </h1>
-          <p className="text-sm text-gray-500">Portail de suivi pédagogique</p>
+          <p className="text-500 font-medium">Gestion pédagogique intelligente</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              {...register('email', { required: 'L\'email est requis' })}
-              className={`w-full px-4 py-3 rounded-lg border ${errors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary'} focus:outline-none focus:ring-2 focus:border-transparent transition-shadow bg-white/50`}
-              placeholder="votre.email@ofppt.ma"
-            />
-            {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-400 ml-1">Email professionnel</label>
+            <div className="relative group">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-500 group-focus-within:text-primary transition-colors" />
+              <input
+                type="email"
+                {...register('email', { required: 'L\'email est requis' })}
+                className={`w-full bg-input border ${errors.email ? 'border-red-500/50 focus:ring-red-500/20' : 'border-border focus:ring-primary/20 focus:border-primary'} py-3.5 pl-12 pr-4 rounded-2xl text-100 focus:outline-none focus:ring-4 transition-all duration-300 placeholder:text-500`}
+                placeholder="nom.prenom@ofppt.ma"
+              />
+            </div>
+            {errors.email && <p className="text-xs font-medium text-red-400 ml-1 mt-1">{errors.email.message}</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-            <input
-              type="password"
-              {...register('password', { required: 'Le mot de passe est requis' })}
-              className={`w-full px-4 py-3 rounded-lg border ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary'} focus:outline-none focus:ring-2 focus:border-transparent transition-shadow bg-white/50`}
-              placeholder="••••••••"
-            />
-            {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-400 ml-1">Mot de passe</label>
+            <div className="relative group">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-500 group-focus-within:text-primary transition-colors" />
+              <input
+                type="password"
+                {...register('password', { required: 'Le mot de passe est requis' })}
+                className={`w-full bg-input border ${errors.password ? 'border-red-500/50 focus:ring-red-500/20' : 'border-border focus:ring-primary/20 focus:border-primary'} py-3.5 pl-12 pr-4 rounded-2xl text-100 focus:outline-none focus:ring-4 transition-all duration-300 placeholder:text-500`}
+                placeholder="••••••••"
+              />
+            </div>
+            {errors.password && <p className="text-xs font-medium text-red-400 ml-1 mt-1">{errors.password.message}</p>}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-secondary hover:bg-secondary-dark text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
           >
-            {loading ? 'Connexion en cours...' : 'Se connecter'}
+            {loading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              "Se connecter"
+            )}
           </button>
         </form>
-      </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-xs text-500 font-medium">
+            Accès réservé au personnel et stagiaires de l'OFPPT
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 };
 
 export default Login;
+

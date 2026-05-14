@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStagiaires, useFilieres } from '../../hooks/useQueries';
 import { useAuth } from '../../context/AuthContext';
-import { FiSearch, FiFilter, FiEdit2, FiEye, FiTrash2, FiPlus } from 'react-icons/fi';
+import { Search, Filter, Edit2, Eye, Trash2, Plus, UserCircle, Mail, Hash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import { useQueryClient } from '@tanstack/react-query';
@@ -11,8 +11,12 @@ import CustomSelect from '../../components/ui/CustomSelect';
 import StagiaireForm from '../../components/stagiaires/StagiaireForm';
 import StagiaireDetails from '../../components/stagiaires/StagiaireDetails';
 import { useDeleteStagiaire } from '../../hooks/useQueries';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNotification } from '../../context/NotificationContext';
+
 const StagiairesList = () => {
   const { user } = useAuth();
+  const { notify } = useNotification();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({ search: '', filiere_id: '', statut: '', groupe: '', page: 1 });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -32,7 +36,6 @@ const StagiairesList = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // La recherche se fait via l'état des filtres
   };
 
   const executeDelete = () => {
@@ -53,42 +56,42 @@ const StagiairesList = () => {
   const statuts = ['actif', 'suspendu', 'diplome', 'abandon'];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-8 pb-10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-primary">Stagiaires</h1>
-          <p className="text-gray-500 mt-1">Gestion et suivi des étudiants</p>
+          <h1 className="text-4xl font-black tracking-tight text-100 mb-2">Stagiaires</h1>
+          <p className="text-500 font-medium">Gestion et suivi de la base étudiante</p>
         </div>
         
         {user?.role === 'admin' && (
           <button 
             onClick={() => setIsAddModalOpen(true)}
-            className="bg-secondary hover:bg-secondary-dark text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium shadow-sm hover:shadow transition-all"
+            className="bg-primary hover:bg-primary/90 text-white px-6 py-3.5 rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-primary/20 transition-all hover:-translate-y-1"
           >
-            <FiPlus /> Ajouter un stagiaire
+            <Plus size={20} strokeWidth={3} /> Ajouter un stagiaire
           </button>
         )}
       </div>
 
-      {/* Filtres et Recherche */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <form onSubmit={handleSearch} className="flex flex-wrap gap-4 items-end">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+      {/* Filters Section */}
+      <div className="glass rounded-[2rem] p-6">
+        <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+          <div className="md:col-span-6 relative group">
+            <label className="block text-xs font-bold text-500 uppercase tracking-widest mb-2 ml-1">Recherche</label>
             <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
               <input 
                 type="text" 
                 placeholder="Nom, Prénom, Code Massar..." 
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                className="w-full bg-input border border-border rounded-xl py-2.5 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-500"
                 value={filters.search}
                 onChange={(e) => setFilters({...filters, search: e.target.value, page: 1})}
               />
-              <FiSearch className="absolute left-3 top-3 text-gray-400" />
             </div>
           </div>
 
-          <div className="w-full sm:w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Filière</label>
+          <div className="md:col-span-3">
+            <label className="block text-xs font-bold text-500 uppercase tracking-widest mb-2 ml-1">Filière</label>
             <CustomSelect
               options={[
                 { value: '', label: 'Toutes les filières' },
@@ -96,12 +99,12 @@ const StagiairesList = () => {
               ]}
               value={filters.filiere_id}
               onChange={(value) => setFilters({...filters, filiere_id: value, page: 1})}
-              placeholder="Toutes les filières"
+              placeholder="Filières"
             />
           </div>
 
-          <div className="w-full sm:w-[200px]">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+          <div className="md:col-span-3">
+            <label className="block text-xs font-bold text-500 uppercase tracking-widest mb-2 ml-1">Statut</label>
             <CustomSelect
               options={[
                 { value: '', label: 'Tous les statuts' },
@@ -109,121 +112,137 @@ const StagiairesList = () => {
               ]}
               value={filters.statut}
               onChange={(value) => setFilters({...filters, statut: value, page: 1})}
-              placeholder="Tous les statuts"
+              placeholder="Statuts"
             />
           </div>
         </form>
       </div>
 
-      {/* Tableau */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Table Section */}
+      <div className="glass rounded-[2.5rem] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="py-4 px-6 font-semibold text-gray-600">Stagiaire</th>
-                <th className="py-4 px-6 font-semibold text-gray-600">Filière & Groupe</th>
-                <th className="py-4 px-6 font-semibold text-gray-600">Code Massar</th>
-                <th className="py-4 px-6 font-semibold text-gray-600">Statut</th>
-                <th className="py-4 px-6 font-semibold text-gray-600 text-right">Actions</th>
+              <tr className="bg-overlay border-b border-border">
+                <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em]">Stagiaire</th>
+                <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em]">Filière & Groupe</th>
+                <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em]">Code Massar</th>
+                <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em]">Statut</th>
+                <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-right">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" className="py-8 text-center text-gray-500">Chargement des données...</td>
+                  <td colSpan="5" className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="h-8 w-8 border-t-2 border-primary rounded-full animate-spin" />
+                      <span className="text-500 font-medium">Chargement des stagiaires...</span>
+                    </div>
+                  </td>
                 </tr>
               ) : stagiairesData?.data?.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="py-8 text-center text-gray-500">Aucun stagiaire trouvé.</td>
+                  <td colSpan="5" className="py-20 text-center text-500 font-medium italic">Aucun stagiaire trouvé.</td>
                 </tr>
               ) : (
-                stagiairesData?.data?.map((stagiaire) => (
-                  <tr key={stagiaire.id} className="border-b border-gray-100 hover:bg-slate-50 transition-colors">
-                    <td className="py-3 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 flex-shrink-0 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold overflow-hidden">
+                stagiairesData?.data?.map((stagiaire, index) => (
+                  <motion.tr 
+                    key={stagiaire.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="group hover:bg-overlay transition-colors"
+                  >
+                    <td className="py-4 px-8">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 flex-shrink-0 bg-gradient-to-br from-primary/20 to-secondary/10 rounded-xl flex items-center justify-center text-primary font-black overflow-hidden ring-1 ring-border group-hover:ring-primary/30 transition-all">
                           {stagiaire.photo ? (
                             <img src={stagiaire.photo} alt={stagiaire.nom} className="h-full w-full object-cover" />
                           ) : (
-                            stagiaire.nom.charAt(0)
+                            <UserCircle className="w-6 h-6 opacity-40" />
                           )}
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-800">{stagiaire.nom_complet}</p>
-                          <p className="text-xs text-gray-500">{stagiaire.email || 'Sans email'}</p>
+                        <div className="min-w-0">
+                          <p className="font-bold text-100 truncate group-hover:text-primary transition-colors">{stagiaire.nom_complet}</p>
+                          <p className="text-xs text-500 flex items-center gap-1.5 mt-0.5 truncate">
+                            <Mail className="w-3 h-3" /> {stagiaire.email || 'Sans email'}
+                          </p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-6">
-                      <p className="font-medium text-gray-800">{stagiaire.filiere?.code}</p>
-                      <p className="text-xs text-secondary font-medium">{stagiaire.groupe}</p>
+                    <td className="py-4 px-8">
+                      <p className="text-sm font-bold text-200">{stagiaire.filiere?.code}</p>
+                      <p className="text-[10px] uppercase font-black tracking-widest text-primary mt-1">{stagiaire.groupe}</p>
                     </td>
-                    <td className="py-3 px-6 text-gray-600 font-medium">
-                      {stagiaire.code_massar}
+                    <td className="py-4 px-8">
+                      <div className="flex items-center gap-2 text-400 font-medium text-sm">
+                        <Hash className="w-3 h-3 opacity-30" />
+                        {stagiaire.code_massar}
+                      </div>
                     </td>
-                    <td className="py-3 px-6">
-                      <span className={`px-3 py-1 text-xs font-semibold rounded-full capitalize
-                        ${stagiaire.statut === 'actif' ? 'bg-green-100 text-green-700' : ''}
-                        ${stagiaire.statut === 'suspendu' ? 'bg-red-100 text-red-700' : ''}
-                        ${stagiaire.statut === 'diplome' ? 'bg-blue-100 text-blue-700' : ''}
-                        ${stagiaire.statut === 'abandon' ? 'bg-gray-100 text-gray-700' : ''}
+                    <td className="py-4 px-8">
+                      <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border
+                        ${stagiaire.statut === 'actif' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : ''}
+                        ${stagiaire.statut === 'suspendu' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : ''}
+                        ${stagiaire.statut === 'diplome' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : ''}
+                        ${stagiaire.statut === 'abandon' ? 'bg-zinc-500/10 text-400 border-border' : ''}
                       `}>
                         {stagiaire.statut}
                       </span>
                     </td>
-                    <td className="py-3 px-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="py-4 px-8 text-right">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                         <button 
-                          className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" 
+                          className="p-2 text-400 hover:text-100 hover:bg-overlay rounded-xl transition-all" 
                           title="Voir profil"
                           onClick={() => {
                             setSelectedStagiaireId(stagiaire.id);
                             setIsDetailsModalOpen(true);
                           }}
                         >
-                          <FiEye />
+                          <Eye size={18} />
                         </button>
                         {user?.role === 'admin' && (
                           <>
                             <button 
-                              className="p-2 text-gray-400 hover:text-secondary hover:bg-secondary/10 rounded-lg transition-colors" 
+                              className="p-2 text-400 hover:text-secondary hover:bg-overlay rounded-xl transition-all" 
                               title="Modifier"
                               onClick={() => {
                                 setStagiaireToEdit(stagiaire);
                                 setIsEditModalOpen(true);
                               }}
                             >
-                              <FiEdit2 />
+                              <Edit2 size={18} />
                             </button>
                             <button 
-                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" 
+                              className="p-2 text-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all" 
                               title="Supprimer"
                               onClick={() => {
                                 setStagiaireToDelete(stagiaire);
                                 setIsDeleteModalOpen(true);
                               }}
                             >
-                              <FiTrash2 />
+                              <Trash2 size={18} />
                             </button>
                           </>
                         )}
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination Section */}
         {stagiairesData?.meta && stagiairesData.meta.last_page > 1 && (
-          <div className="p-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-600">
-            <div>
-              Affichage de {stagiairesData.meta.from} à {stagiairesData.meta.to} sur {stagiairesData.meta.total} stagiaires
+          <div className="p-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="text-xs font-bold text-500 uppercase tracking-widest">
+              Affichage <span className="text-200">{stagiairesData.meta.from}</span> à <span className="text-200">{stagiairesData.meta.to}</span> sur <span className="text-200">{stagiairesData.meta.total}</span>
             </div>
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 sm:pb-0">
               {stagiairesData.meta.links.map((link, i) => (
                 <button
                   key={i}
@@ -232,11 +251,11 @@ const StagiairesList = () => {
                     const url = new URL(link.url);
                     setFilters({...filters, page: url.searchParams.get('page')});
                   }}
-                  className={`px-3 py-1 rounded-md border transition-colors ${
+                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all duration-300 border ${
                     link.active 
-                      ? 'bg-primary text-white border-primary' 
-                      : 'bg-white border-gray-200 hover:bg-gray-50'
-                  } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      ? 'bg-primary text-white border-primary glow-primary' 
+                      : 'bg-input border-border text-500 hover:text-100 hover:bg-overlay'
+                  } ${!link.url ? 'opacity-20 cursor-not-allowed' : ''}`}
                   dangerouslySetInnerHTML={{ __html: link.label }}
                 />
               ))}
@@ -245,6 +264,7 @@ const StagiairesList = () => {
         )}
       </div>
 
+      {/* Modals remain functionally the same but visually inherits the new styles */}
       <Modal isOpen={isAddModalOpen} closeModal={() => setIsAddModalOpen(false)} title="Ajouter un nouveau stagiaire">
         <StagiaireForm filieres={filieres} onClose={() => setIsAddModalOpen(false)} />
       </Modal>
@@ -268,8 +288,8 @@ const StagiairesList = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={executeDelete}
         title="Supprimer le stagiaire"
-        message={`Êtes-vous sûr de vouloir supprimer le stagiaire ${stagiaireToDelete?.nom_complet} ? Cette action est irréversible.`}
-        confirmText="Supprimer"
+        message={`Êtes-vous sûr de vouloir supprimer le stagiaire ${stagiaireToDelete?.nom_complet} ? Cette action est irréversible et supprimera toutes ses données (notes, présences, etc).`}
+        confirmText="Supprimer définitivement"
         isLoading={deleteMutation.isPending}
       />
     </div>
@@ -277,3 +297,4 @@ const StagiairesList = () => {
 };
 
 export default StagiairesList;
+

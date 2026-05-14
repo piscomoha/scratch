@@ -1,11 +1,11 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { FiAlertTriangle } from 'react-icons/fi';
+import { AlertTriangle } from 'lucide-react';
 
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirmer', cancelText = 'Annuler', isLoading = false }) => {
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={isLoading ? () => {} : onClose}>
+      <Dialog as="div" className="relative z-[100]" onClose={isLoading ? () => {} : onClose}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -15,7 +15,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -23,24 +23,24 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
+              enterFrom="opacity-0 scale-95 translate-y-4"
+              enterTo="opacity-100 scale-100 translate-y-0"
               leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+              leaveFrom="opacity-100 scale-100 translate-y-0"
+              leaveTo="opacity-0 scale-95 translate-y-4"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <div className="flex flex-col items-center justify-center text-center">
-                  <div className="mx-auto flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-20 sm:w-20 mb-4">
-                    <FiAlertTriangle className="h-10 w-10 text-red-600" aria-hidden="true" />
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-[2rem] glass p-8 text-center align-middle shadow-2xl transition-all border border-white/10">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-red-500/10 mb-6">
+                    <AlertTriangle className="h-10 w-10 text-red-500" aria-hidden="true" />
                   </div>
                   
-                  <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-gray-900 mb-2">
+                  <Dialog.Title as="h3" className="text-2xl font-bold text-white tracking-tight mb-2">
                     {title}
                   </Dialog.Title>
                   
                   <div className="mt-2">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-zinc-400 leading-relaxed">
                       {message}
                     </p>
                   </div>
@@ -49,7 +49,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
                 <div className="mt-8 flex justify-center gap-3">
                   <button
                     type="button"
-                    className="inline-flex justify-center rounded-xl border border-gray-300 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors"
+                    className="flex-1 rounded-xl border border-border bg-white/[0.03] px-6 py-3 text-sm font-semibold text-zinc-300 hover:bg-white/[0.06] hover:text-white transition-all duration-300"
                     onClick={onClose}
                     disabled={isLoading}
                   >
@@ -57,7 +57,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
                   </button>
                   <button
                     type="button"
-                    className="inline-flex justify-center rounded-xl border border-transparent bg-red-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 transition-colors disabled:opacity-70 flex items-center gap-2"
+                    className="flex-1 rounded-xl bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 hover:shadow-lg hover:shadow-red-500/20 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
                     onClick={onConfirm}
                     disabled={isLoading}
                   >
@@ -77,3 +77,4 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
 };
 
 export default ConfirmModal;
+

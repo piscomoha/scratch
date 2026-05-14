@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useFilieres } from '../../hooks/useQueries';
 import { useAuth } from '../../context/AuthContext';
-import { FiCheck, FiX, FiClock, FiFileText } from 'react-icons/fi';
-import toast from 'react-hot-toast';
+import { Check, X, Clock, FileText, Calendar, Users, Zap, Loader2 } from 'lucide-react';
 import api from '../../api/axios';
 import CustomSelect from '../../components/ui/CustomSelect';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useNotification } from '../../context/NotificationContext';
 
 const PresencesList = () => {
   const { user } = useAuth();
+  const { notify } = useNotification();
   const [filiereId, setFiliereId] = useState('');
   const [groupe, setGroupe] = useState('');
   const [moduleId, setModuleId] = useState('');
@@ -32,7 +34,7 @@ const PresencesList = () => {
 
   const chargerSeance = async () => {
     if (!groupe || !moduleId || !dateSeance) {
-      toast.error('Veuillez sélectionner un groupe, un module et une date');
+      notify('error', 'Paramètres requis', 'Veuillez sélectionner un groupe, un module et une date.');
       return;
     }
 
@@ -41,7 +43,6 @@ const PresencesList = () => {
       const stagsRes = await api.get(`/stagiaires?groupe=${groupe}&per_page=100`);
       const stags = stagsRes.data.data;
 
-      // On vérifie s'il y a déjà des présences saisies pour cette séance
       const presencesRes = await api.get(`/presences?module_id=${moduleId}&date=${dateSeance}&groupe=${groupe}`);
       const presencesExistantes = presencesRes.data.data;
 
@@ -49,7 +50,7 @@ const PresencesList = () => {
       stags.forEach(stag => {
         const existante = presencesExistantes.find(p => p.stagiaire_id === stag.id);
         formState[stag.id] = {
-          statut: existante ? existante.statut : 'present', // Par défaut présent
+          statut: existante ? existante.statut : 'present',
           motif: existante?.motif || '',
         };
       });
@@ -58,7 +59,7 @@ const PresencesList = () => {
       setPresencesForm(formState);
       
     } catch (e) {
-      toast.error('Erreur de chargement');
+      notify('error', 'Erreur de chargement', 'Impossible de récupérer la liste des stagiaires pour cette séance.');
     } finally {
       setLoading(false);
     }
@@ -87,51 +88,76 @@ const PresencesList = () => {
       };
 
       await api.post('/presences/bulk', payload);
-      toast.success('Pointage enregistré avec succès');
+      notify('success', 'Pointage enregistré', `Le pointage pour le groupe ${groupe} a été validé avec succès.`);
     } catch (e) {
       const err = e.response?.data?.message || 'Erreur lors de la sauvegarde';
-      toast.error(err);
+      notify('error', 'Erreur de pointage', err);
     } finally {
       setLoading(false);
     }
   };
 
   const statutConfig = {
-    present: { label: 'Présent', bg: 'bg-green-100', text: 'text-green-700', icon: <FiCheck />, border: 'border-green-500' },
-    absent: { label: 'Absent', bg: 'bg-red-100', text: 'text-red-700', icon: <FiX />, border: 'border-red-500' },
-    retard: { label: 'Retard', bg: 'bg-yellow-100', text: 'text-yellow-700', icon: <FiClock />, border: 'border-yellow-500' },
-    justifie: { label: 'Justifié', bg: 'bg-blue-100', text: 'text-blue-700', icon: <FiFileText />, border: 'border-blue-500' },
+    present: { label: 'Présent', color: 'emerald', icon: <Check size={18} /> },
+    absent: { label: 'Absent', color: 'rose', icon: <X size={18} /> },
+    retard: { label: 'Retard', color: 'amber', icon: <Clock size={18} /> },
+    justifie: { label: 'Justifié', color: 'blue', icon: <FileText size={18} /> },
+  };
+
+  const getStatutColors = (statut, isActive) => {
+    const config = statutConfig[statut];
+    if (!isActive) return 'text-500 hover:text-100 hover:bg-overlay';
+    
+    switch (config.color) {
+      case 'emerald': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      case 'rose': return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+      case 'amber': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      case 'blue': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      default: return '';
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-primary">Gestion des Présences</h1>
-        <p className="text-gray-500 mt-1">Pointage rapide et suivi des absences</p>
+    <div className="space-y-8 pb-10">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-100 mb-2">Pointage</h1>
+          <p className="text-500 font-medium">Gestion des présences et absences</p>
+        </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-           {/* Filtres ... */}
-           <div className="w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Filière</label>
+      {/* Filter Controls */}
+      <div className="glass rounded-[2.5rem] p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+           <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Filière</label>
             <CustomSelect
               options={[
-                { value: '', label: 'Sélectionner' },
+                { value: '', label: 'Toutes les filières' },
                 ...(filieres?.map(f => ({ value: f.id, label: f.code })) || [])
               ]}
               value={filiereId}
               onChange={setFiliereId}
-              placeholder="Sélectionner"
+              placeholder="Filière"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Groupe</label>
-            <input type="text" placeholder="Ex: DEV201" className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              value={groupe} onChange={(e) => setGroupe(e.target.value.toUpperCase())} />
+          
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Groupe</label>
+            <div className="relative group">
+              <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
+              <input 
+                type="text" 
+                placeholder="Ex: DEV201" 
+                className="w-full bg-input border border-border rounded-xl py-2.5 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-500"
+                value={groupe} 
+                onChange={(e) => setGroupe(e.target.value.toUpperCase())} 
+              />
+            </div>
           </div>
-          <div className="lg:col-span-2 w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Module</label>
+
+          <div className="space-y-2 lg:col-span-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Module</label>
             <CustomSelect
               options={[
                 { value: '', label: 'Sélectionner un module' },
@@ -140,91 +166,157 @@ const PresencesList = () => {
               value={moduleId}
               onChange={setModuleId}
               disabled={!filiereId}
-              placeholder="Sélectionner un module"
+              placeholder="Module pédagogique"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-            <input type="date" className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              value={dateSeance} onChange={(e) => setDateSeance(e.target.value)} />
           </div>
         </div>
 
-        <div className="flex gap-4 mt-4 items-end">
-          <div className="w-32">
-             <label className="block text-sm font-medium text-gray-700 mb-1">De</label>
-             <input type="time" className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              value={heureDebut} onChange={(e) => setHeureDebut(e.target.value)} />
+        <div className="flex flex-col md:flex-row gap-6 mt-8 pt-8 border-t border-border items-end">
+          <div className="w-full md:w-auto grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Date</label>
+              <div className="relative">
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500" />
+                <input 
+                  type="date" 
+                  className="w-full bg-input border border-border rounded-xl py-2.5 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  value={dateSeance} 
+                  onChange={(e) => setDateSeance(e.target.value)} 
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Horaires</label>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="time" 
+                  className="w-full bg-input border border-border rounded-xl py-2.5 px-3 text-xs text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  value={heureDebut} 
+                  onChange={(e) => setHeureDebut(e.target.value)} 
+                />
+                <span className="text-500">-</span>
+                <input 
+                  type="time" 
+                  className="w-full bg-input border border-border rounded-xl py-2.5 px-3 text-xs text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  value={heureFin} 
+                  onChange={(e) => setHeureFin(e.target.value)} 
+                />
+              </div>
+            </div>
           </div>
-          <div className="w-32">
-             <label className="block text-sm font-medium text-gray-700 mb-1">À</label>
-             <input type="time" className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              value={heureFin} onChange={(e) => setHeureFin(e.target.value)} />
-          </div>
+          
           <div className="flex-1 flex justify-end">
-            <button onClick={chargerSeance} disabled={loading}
-              className="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg font-medium">
+            <button 
+              onClick={chargerSeance} 
+              disabled={loading}
+              className="bg-100 hover:opacity-90 text-background px-8 py-3.5 rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg flex items-center gap-2 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
               Démarrer le pointage
             </button>
           </div>
         </div>
       </div>
 
-      {/* Liste de pointage */}
-      {stagiaires.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-               Séance du {new Date(dateSeance).toLocaleDateString('fr-FR')} 
-               <span className="text-gray-400 font-normal text-lg">({heureDebut} - {heureFin})</span>
-            </h2>
-            <button onClick={sauvegarderPresences} disabled={loading || user?.role === 'stagiaire'}
-               className="bg-secondary text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-opacity-90 transition-all">
-               Sauvegarder le pointage
-            </button>
-          </div>
+      {/* Attendance Grid */}
+      <AnimatePresence mode="wait">
+        {stagiaires.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <h2 className="text-2xl font-black text-100 tracking-tight flex items-center gap-4">
+                <div className="w-1 h-8 bg-primary rounded-full" />
+                Liste de présence
+                <span className="text-sm font-medium text-500 bg-overlay px-3 py-1 rounded-full border border-border">
+                  {stagiaires.length} stagiaires
+                </span>
+              </h2>
+              
+              <button 
+                onClick={sauvegarderPresences} 
+                disabled={loading || user?.role === 'stagiaire'}
+                className="bg-primary hover:bg-primary/90 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-primary/20 transition-all hover:-translate-y-1 flex items-center gap-2"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check size={20} strokeWidth={3} />}
+                Enregistrer le pointage
+              </button>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {stagiaires.map(stag => {
-              const currentStatut = presencesForm[stag.id]?.statut;
-              return (
-                <div key={stag.id} className={`border-2 rounded-xl p-4 transition-all duration-200 ${statutConfig[currentStatut].border} ${statutConfig[currentStatut].bg} bg-opacity-20`}>
-                  <div className="font-bold text-gray-800 text-lg mb-1">{stag.nom_complet}</div>
-                  <div className="text-sm text-gray-500 mb-4">{stag.code_massar}</div>
-                  
-                  <div className="flex bg-white rounded-lg p-1 shadow-sm border border-gray-100">
-                    {Object.entries(statutConfig).map(([key, config]) => (
-                      <button
-                        key={key}
-                        onClick={() => setStatut(stag.id, key)}
-                        disabled={user?.role === 'stagiaire'}
-                        title={config.label}
-                        className={`flex-1 py-2 flex justify-center items-center rounded-md transition-colors ${
-                          currentStatut === key 
-                            ? `${config.bg} ${config.text} font-bold` 
-                            : 'text-gray-400 hover:bg-gray-50'
-                        }`}
-                      >
-                        {config.icon}
-                      </button>
-                    ))}
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {stagiaires.map((stag, index) => {
+                const currentStatut = presencesForm[stag.id]?.statut;
+                return (
+                  <motion.div 
+                    key={stag.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.02 }}
+                    className={`glass rounded-3xl p-6 border-2 transition-all duration-300 relative group
+                      ${currentStatut === 'present' ? 'border-emerald-500/20 bg-emerald-500/[0.02]' : ''}
+                      ${currentStatut === 'absent' ? 'border-rose-500/20 bg-rose-500/[0.02]' : ''}
+                      ${currentStatut === 'retard' ? 'border-amber-500/20 bg-amber-500/[0.02]' : ''}
+                      ${currentStatut === 'justifie' ? 'border-blue-500/20 bg-blue-500/[0.02]' : ''}
+                    `}
+                  >
+                    <div className="flex flex-col items-center text-center mb-6">
+                      <div className={`h-16 w-16 rounded-2xl flex items-center justify-center font-black text-2xl mb-4 transition-all duration-300
+                        ${currentStatut === 'present' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-overlay text-500'}
+                        group-hover:scale-110
+                      `}>
+                        {stag.nom_complet.charAt(0)}
+                      </div>
+                      <h4 className="font-black text-100 truncate w-full">{stag.nom_complet}</h4>
+                      <p className="text-[10px] uppercase font-bold tracking-widest text-500 mt-1">{stag.code_massar}</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-1 p-1 bg-overlay rounded-2xl border border-border">
+                      {Object.entries(statutConfig).map(([key, config]) => (
+                        <button
+                          key={key}
+                          onClick={() => setStatut(stag.id, key)}
+                          disabled={user?.role === 'stagiaire'}
+                          className={`
+                            py-2.5 flex justify-center items-center rounded-xl transition-all duration-300 border border-transparent
+                            ${getStatutColors(key, currentStatut === key)}
+                          `}
+                          title={config.label}
+                        >
+                          {config.icon}
+                        </button>
+                      ))}
+                    </div>
 
-                  {(currentStatut === 'absent' || currentStatut === 'justifie') && (
-                     <input type="text" placeholder="Motif de l'absence..."
-                       className="mt-3 w-full px-3 py-1.5 text-sm rounded bg-white border border-gray-200 outline-none focus:border-primary"
-                       value={presencesForm[stag.id]?.motif || ''}
-                       onChange={e => setPresencesForm(prev => ({...prev, [stag.id]: {...prev[stag.id], motif: e.target.value}}))}
-                     />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+                    <AnimatePresence>
+                      {(currentStatut === 'absent' || currentStatut === 'justifie' || currentStatut === 'retard') && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                        >
+                          <input 
+                            type="text" 
+                            placeholder="Motif ou remarque..."
+                            className="mt-4 w-full bg-input border border-border rounded-xl px-4 py-2.5 text-xs text-100 focus:outline-none focus:border-primary transition-all placeholder:text-500"
+                            value={presencesForm[stag.id]?.motif || ''}
+                            onChange={e => setPresencesForm(prev => ({...prev, [stag.id]: {...prev[stag.id], motif: e.target.value}}))}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
 export default PresencesList;
+

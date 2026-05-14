@@ -8,6 +8,8 @@ import PresencesList from './pages/Presences/PresencesList';
 import NotesList from './pages/Notes/NotesList';
 
 import StagesList from './pages/Stages/StagesList';
+import Settings from './pages/Settings/Settings';
+import Assignments from './pages/Admin/Assignments';
 
 // Composant placeholder pour les pages en cours de développement
 const Placeholder = ({ title }) => (
@@ -32,6 +34,8 @@ function App() {
         <Route path="/notes" element={<NotesList />} />
         <Route path="/presences" element={<PresencesList />} />
         <Route path="/stages" element={<StagesList />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/admin/assignments" element={<Assignments />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -70,16 +70,39 @@ class Stagiaire extends Model
         return $this->hasOne(Stage::class);
     }
 
-    // Calcul du taux de présence en pourcentage
-    public function getTauxPresenceAttribute(): float
+    // Calcul de la moyenne générale (moyenne pondérée par les coefficients)
+    public function getMoyenneGeneraleAttribute(): float
     {
-        $total = $this->presences()->count();
-        if ($total === 0) return 100.0;
+        $notes = $this->notes()->with('module')->get();
+        if ($notes->isEmpty()) return 0.0;
 
-        $presents = $this->presences()
-            ->whereIn('statut', ['present', 'retard'])
-            ->count();
+        $totalPoints = 0;
+        $totalCoefficients = 0;
 
-        return round(($presents / $total) * 100, 1);
+        foreach ($notes as $note) {
+            if ($note->note_finale !== null) {
+                $coef = $note->module->coefficient ?? 1;
+                $totalPoints += ($note->note_finale * $coef);
+                $totalCoefficients += $coef;
+            }
+        }
+
+        if ($totalCoefficients === 0) return 0.0;
+
+        return round($totalPoints / $totalCoefficients, 2);
+    }
+
+    // Appréciation globale
+    public function getAppreciationGeneraleAttribute(): string
+    {
+        $moyenne = $this->moyenne_generale;
+        
+        return match(true) {
+            $moyenne >= 14 => 'Très Bien',
+            $moyenne >= 12 => 'Bien',
+            $moyenne >= 10 => 'Assez Bien',
+            $moyenne >= 8  => 'Passable',
+            default        => 'Insuffisant',
+        };
     }
 }

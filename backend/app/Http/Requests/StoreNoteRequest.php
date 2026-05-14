@@ -16,8 +16,11 @@ class StoreNoteRequest extends FormRequest
         return [
             'stagiaire_id' => 'required|exists:stagiaires,id',
             'module_id' => 'required|exists:modules,id',
-            'note_controle' => 'required|numeric|min:0|max:20',
+            'note_controle_1' => 'required|numeric|min:0|max:20',
+            'note_controle_2' => 'nullable|numeric|min:0|max:20',
+            'note_controle_3' => 'nullable|numeric|min:0|max:20',
             'note_synthese' => 'required|numeric|min:0|max:20',
+            'note_stage' => 'nullable|numeric|min:0|max:20',
             'annee_scolaire' => 'required|string|max:9', // Format: 2024-2025
             'semestre' => 'required|in:1,2',
         ];

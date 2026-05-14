@@ -80,8 +80,11 @@ class NoteController extends Controller
         $note = Note::findOrFail($id);
 
         $validated = $request->validate([
-            'note_controle' => 'sometimes|numeric|min:0|max:20',
+            'note_controle_1' => 'sometimes|numeric|min:0|max:20',
+            'note_controle_2' => 'sometimes|numeric|min:0|max:20',
+            'note_controle_3' => 'sometimes|numeric|min:0|max:20',
             'note_synthese' => 'sometimes|numeric|min:0|max:20',
+            'note_stage' => 'sometimes|numeric|min:0|max:20',
         ]);
 
         $note->update($validated);

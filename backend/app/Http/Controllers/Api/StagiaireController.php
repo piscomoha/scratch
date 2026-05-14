@@ -13,6 +13,8 @@ use App\Models\Stagiaire;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class StagiaireController extends Controller
 {
@@ -22,7 +24,14 @@ class StagiaireController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Stagiaire::with('filiere');
+        $query = Stagiaire::with(['filiere', 'stage']);
+        $user = $request->user();
+
+        // Si l'utilisateur est un formateur, on filtre par ses groupes affectés
+        if ($user->role === 'formateur') {
+            $assignedGroups = $user->affectations()->pluck('groupe')->toArray();
+            $query->whereIn('groupe', $assignedGroups);
+        }
 
         // Recherche par nom, prénom ou code massar
         if ($search = $request->get('search')) {
@@ -62,6 +71,15 @@ class StagiaireController extends Controller
             $data['photo'] = $request->file('photo')->store('photos/stagiaires', 'public');
         }
 
+        // Créer d'abord l'utilisateur pour l'authentification
+        $user = User::create([
+            'name' => $data['prenom'] . ' ' . $data['nom'],
+            'email' => $data['email'],
+            'password' => Hash::make('password'), // Mot de passe par défaut
+            'role' => 'stagiaire',
+        ]);
+
+        $data['user_id'] = $user->id;
         $stagiaire = Stagiaire::create($data);
         $stagiaire->load('filiere');
 

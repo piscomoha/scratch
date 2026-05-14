@@ -1,30 +1,46 @@
 import { useStagiaire } from '../../hooks/useQueries';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiCalendar, FiBookOpen } from 'react-icons/fi';
+import { User, Mail, Phone, MapPin, Calendar, BookOpen, GraduationCap, Hash, ShieldCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const StagiaireDetails = ({ stagiaireId }) => {
   const { data: stagiaire, isLoading, isError } = useStagiaire(stagiaireId);
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-10">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="h-10 w-10 border-t-2 border-primary rounded-full animate-spin" />
+        <p className="text-zinc-500 font-medium">Récupération du profil...</p>
       </div>
     );
   }
 
   if (isError || !stagiaire) {
     return (
-      <div className="text-center py-10 text-red-500">
-        Erreur lors du chargement des informations du stagiaire.
+      <div className="text-center py-20 text-rose-500 font-bold glass rounded-[2rem] border border-rose-500/20">
+        Erreur lors du chargement des informations.
       </div>
     );
   }
 
+  const getStatusStyles = (statut) => {
+    switch (statut) {
+      case 'actif': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      case 'suspendu': return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+      case 'diplome': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'abandon': return 'bg-zinc-500/10 text-400 border-border';
+      default: return 'bg-zinc-500/10 text-400 border-border';
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* En-tête du profil */}
-      <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-gray-100">
-        <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center text-primary text-2xl font-bold overflow-hidden flex-shrink-0">
+    <div className="space-y-8">
+      {/* Profile Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center gap-6 p-6 glass rounded-[2.5rem] bg-overlay"
+      >
+        <div className="h-24 w-24 bg-gradient-to-br from-primary/20 to-secondary/10 rounded-3xl flex items-center justify-center text-primary text-4xl font-black overflow-hidden flex-shrink-0 ring-1 ring-border shadow-2xl">
           {stagiaire.photo ? (
             <img src={stagiaire.photo} alt={stagiaire.nom} className="h-full w-full object-cover" />
           ) : (
@@ -32,99 +48,122 @@ const StagiaireDetails = ({ stagiaireId }) => {
           )}
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{stagiaire.nom_complet}</h2>
-          <div className="flex items-center gap-3 mt-1">
-            <span className="text-sm font-medium text-gray-600 bg-white px-2 py-1 rounded border shadow-sm">
-              Code Massar: {stagiaire.code_massar}
-            </span>
-            <span className={`px-2 py-1 text-xs font-semibold rounded-full capitalize
-              ${stagiaire.statut === 'actif' ? 'bg-green-100 text-green-700' : ''}
-              ${stagiaire.statut === 'suspendu' ? 'bg-red-100 text-red-700' : ''}
-              ${stagiaire.statut === 'diplome' ? 'bg-blue-100 text-blue-700' : ''}
-              ${stagiaire.statut === 'abandon' ? 'bg-gray-100 text-gray-700' : ''}
-            `}>
+          <h2 className="text-3xl font-black text-100 tracking-tight">{stagiaire.nom_complet}</h2>
+          <div className="flex flex-wrap items-center gap-3 mt-3">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-input border border-border text-[10px] font-black uppercase tracking-widest text-400">
+              <Hash size={12} className="text-primary" />
+              Massar: <span className="text-100">{stagiaire.code_massar}</span>
+            </div>
+            <div className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-xl border ${getStatusStyles(stagiaire.statut)}`}>
               {stagiaire.statut}
-            </span>
+            </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Informations Personnelles */}
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center gap-2">
-            <FiUser className="text-primary" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Personal Info */}
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="glass rounded-[2.5rem] p-8 relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 p-8 text-primary opacity-5 group-hover:opacity-10 transition-opacity">
+            <User size={80} strokeWidth={3} />
+          </div>
+          
+          <h3 className="text-lg font-bold text-100 mb-8 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <User size={18} />
+            </div>
             Informations Personnelles
           </h3>
-          <ul className="space-y-3">
-            <li className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded bg-gray-50 flex items-center justify-center text-gray-500">
-                <FiCalendar />
+          
+          <ul className="space-y-6 relative z-10">
+            <li className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-overlay border border-border flex items-center justify-center text-500">
+                <Calendar size={18} />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Date de naissance</p>
-                <p className="font-medium text-gray-800">{stagiaire.date_naissance} ({stagiaire.genre === 'M' ? 'Masculin' : 'Féminin'})</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-1">Naissance & Genre</p>
+                <p className="text-sm font-bold text-100">{stagiaire.date_naissance} — {stagiaire.genre === 'M' ? 'Masculin' : 'Féminin'}</p>
               </div>
             </li>
-            <li className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded bg-gray-50 flex items-center justify-center text-gray-500">
-                <FiMail />
+            <li className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-overlay border border-border flex items-center justify-center text-500">
+                <Mail size={18} />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Email</p>
-                <p className="font-medium text-gray-800">{stagiaire.email || 'Non renseigné'}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-1">Contact Email</p>
+                <p className="text-sm font-bold text-100">{stagiaire.email || 'Non renseigné'}</p>
               </div>
             </li>
-            <li className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded bg-gray-50 flex items-center justify-center text-gray-500">
-                <FiPhone />
+            <li className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-overlay border border-border flex items-center justify-center text-500">
+                <Phone size={18} />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Téléphone</p>
-                <p className="font-medium text-gray-800">{stagiaire.telephone}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-1">Téléphone</p>
+                <p className="text-sm font-bold text-100">{stagiaire.telephone}</p>
               </div>
             </li>
-            <li className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded bg-gray-50 flex items-center justify-center text-gray-500">
-                <FiMapPin />
+            <li className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-overlay border border-border flex items-center justify-center text-500">
+                <MapPin size={18} />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Adresse</p>
-                <p className="font-medium text-gray-800">{stagiaire.adresse || 'Non renseignée'}, {stagiaire.ville}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-1">Localisation</p>
+                <p className="text-sm font-bold text-100 leading-relaxed">{stagiaire.adresse || 'Non renseignée'}, {stagiaire.ville}</p>
               </div>
             </li>
           </ul>
-        </div>
+        </motion.div>
 
-        {/* Informations Académiques */}
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center gap-2">
-            <FiBookOpen className="text-secondary" />
+        {/* Academic Info */}
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="glass rounded-[2.5rem] p-8"
+        >
+          <h3 className="text-lg font-bold text-100 mb-8 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
+              <BookOpen size={18} />
+            </div>
             Parcours Académique
           </h3>
-          <ul className="space-y-4">
-            <li>
-              <p className="text-xs text-gray-500 mb-1">Filière</p>
-              <div className="bg-gray-50 p-2 rounded border border-gray-100">
-                <p className="font-medium text-gray-800">{stagiaire.filiere?.code}</p>
-                <p className="text-xs text-gray-500">{stagiaire.filiere?.libelle}</p>
+          
+          <div className="space-y-8">
+            <div className="p-6 rounded-[2rem] bg-overlay border border-border relative overflow-hidden group">
+              <div className="absolute -right-4 -bottom-4 p-4 text-secondary opacity-5 group-hover:scale-110 transition-transform">
+                <GraduationCap size={120} strokeWidth={1} />
               </div>
-            </li>
-            <li className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-gray-500">Groupe</p>
-                <p className="font-medium text-gray-800">{stagiaire.groupe}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-3 ml-1 flex items-center gap-2">
+                <ShieldCheck size={12} className="text-secondary" /> Spécialité
+              </p>
+              <p className="text-xl font-black text-100 group-hover:text-secondary transition-colors">{stagiaire.filiere?.code}</p>
+              <p className="text-xs font-medium text-500 mt-1">{stagiaire.filiere?.libelle}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="p-6 rounded-[2rem] bg-overlay border border-border">
+                <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-2">Groupe</p>
+                <p className="text-2xl font-black text-100">{stagiaire.groupe}</p>
               </div>
-              <div>
-                <p className="text-xs text-gray-500">Année de formation</p>
-                <p className="font-medium text-gray-800">{stagiaire.annee_formation}{stagiaire.annee_formation === 1 ? 'ère' : 'ème'} année</p>
+              <div className="p-6 rounded-[2rem] bg-overlay border border-border">
+                <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-2">Année</p>
+                <p className="text-2xl font-black text-100">
+                  {stagiaire.annee_formation}<span className="text-sm font-bold text-500 ml-1">{stagiaire.annee_formation === 1 ? 'ère' : 'ème'}</span>
+                </p>
               </div>
-            </li>
-          </ul>
-        </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
 };
 
 export default StagiaireDetails;
+

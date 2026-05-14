@@ -1,25 +1,143 @@
 @import "tailwindcss";
 
-@theme {
-  --color-primary: #1B3A6B; /* Bleu Marine OFPPT */
-  --color-secondary: #F58220; /* Orange OFPPT */
-  --color-background: #F5F5F5; /* Gris clair */
-  
-  --color-primary-dark: #12284b;
-  --color-secondary-dark: #cc6a16;
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --color-primary: #8B5CF6;
+  --color-secondary: #3B82F6;
+  --background: #09090B;
+  --surface: #18181B;
+  --glass: rgba(24, 24, 27, 0.7);
+  --border: rgba(255, 255, 255, 0.1);
+  --text-100: #F4F4F5;
+  --text-200: #E4E4E7;
+  --text-400: #A1A1AA;
+  --text-500: #71717A;
+  --overlay: rgba(255, 255, 255, 0.03);
+  --overlay-hover: rgba(255, 255, 255, 0.08);
+  --input-bg: rgba(255, 255, 255, 0.03);
+  --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
 }
 
-body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--color-background);
-  color: #333;
+:root.light {
+  --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --glass: rgba(255, 255, 255, 0.8);
+  --border: rgba(0, 0, 0, 0.08);
+  --text-100: #0F172A;
+  --text-200: #1E293B;
+  --text-400: #64748B;
+  --text-500: #94A3B8;
+  --overlay: rgba(0, 0, 0, 0.03);
+  --overlay-hover: rgba(0, 0, 0, 0.05);
+  --input-bg: #FFFFFF;
+  --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+@theme {
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-glass: var(--glass);
+  --color-border: var(--border);
+  
+  /* Semantic Text Colors mapped to Tailwind classes */
+  --color-100: var(--text-100);
+  --color-200: var(--text-200);
+  --color-400: var(--text-400);
+  --color-500: var(--text-500);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  body {
+    @apply bg-background antialiased;
+    color: var(--text-100);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Global Form Elements Fix */
+  input, select, textarea {
+    @apply bg-input text-100 border-border placeholder:text-500 transition-all duration-200;
+  }
+
+  /* Specific fix for browser-default selects/inputs */
+  input:focus, select:focus, textarea:focus {
+    @apply outline-none ring-2 ring-primary/20 border-primary;
+  }
+
+  /* Custom Selection */
+  ::selection {
+    @apply bg-primary/30 text-100;
+  }
+
+  /* Premium Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    @apply rounded-full hover:opacity-80 transition-all;
+  }
 }
 
 @layer utilities {
-  .glass-panel {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  .glass {
+    @apply bg-glass backdrop-blur-xl border border-border;
+    box-shadow: var(--card-shadow);
+  }
+  
+  .glass-hover {
+    transition: all 0.3s ease;
+  }
+  .glass-hover:hover {
+    background-color: var(--overlay-hover);
+  }
+
+  /* Ensure text utilities use variables */
+  .text-100 { color: var(--text-100); }
+  .text-200 { color: var(--text-200); }
+  .text-400 { color: var(--text-400); }
+  .text-500 { color: var(--text-500); }
+
+  .bg-overlay { background-color: var(--overlay); }
+  .bg-overlay-hover:hover { background-color: var(--overlay-hover); }
+  .bg-input { background-color: var(--input-bg); }
+
+  .text-gradient {
+    @apply bg-gradient-to-br from-100 to-500 bg-clip-text text-transparent;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
   }
 }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+
+

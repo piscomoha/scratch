@@ -16,6 +16,7 @@ class Module extends Model
         'filiere_id',
         'semestre',
         'annee_formation',
+        'is_regional',
     ];
 
     protected function casts(): array
@@ -24,6 +25,7 @@ class Module extends Model
             'coefficient' => 'decimal:1',
             'semestre' => 'integer',
             'annee_formation' => 'integer',
+            'is_regional' => 'boolean',
         ];
     }
 
