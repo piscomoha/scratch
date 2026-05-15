@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Application de Suivi des Stagiaires OFPPT
 
 Application web complète développée avec Laravel 11 et React.js permettant la gestion numérique des stagiaires.
