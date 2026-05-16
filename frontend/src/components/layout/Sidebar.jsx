@@ -11,7 +11,8 @@ import {
   LogOut,
   Settings,
   Link as LinkIcon,
-  X
+  X,
+  FileText
 } from 'lucide-react';
 import logo from '../../assets/ofppt_logo.png';
 
@@ -22,6 +23,7 @@ const Sidebar = () => {
   const links = [
     { name: 'Tableau de bord', to: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'formateur'] },
     { name: 'Affectations', to: '/admin/assignments', icon: LinkIcon, roles: ['admin'] },
+    { name: 'Documents', to: '/admin/documents', icon: FileText, roles: ['admin'] },
     { name: 'Stagiaires', to: '/stagiaires', icon: Users, roles: ['admin', 'formateur', 'stagiaire'] },
     { name: 'Notes', to: '/notes', icon: BookOpen, roles: ['admin', 'formateur'] },
     { name: 'Présences', to: '/presences', icon: CheckSquare, roles: ['admin', 'formateur'] },

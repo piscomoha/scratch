@@ -10,6 +10,7 @@ import NotesList from './pages/Notes/NotesList';
 import StagesList from './pages/Stages/StagesList';
 import Settings from './pages/Settings/Settings';
 import Assignments from './pages/Admin/Assignments';
+import Documents from './pages/Admin/Documents';
 
 // Composant placeholder pour les pages en cours de développement
 const Placeholder = ({ title }) => (
@@ -36,6 +37,7 @@ function App() {
         <Route path="/stages" element={<StagesList />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/admin/assignments" element={<Assignments />} />
+        <Route path="/admin/documents" element={<Documents />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
