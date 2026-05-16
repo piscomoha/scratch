@@ -19,7 +19,7 @@ const Modal = ({ isOpen, closeModal, title, children, maxWidth = 'max-w-2xl' }) 
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -29,20 +29,20 @@ const Modal = ({ isOpen, closeModal, title, children, maxWidth = 'max-w-2xl' }) 
               leaveFrom="opacity-100 scale-100 translate-y-0"
               leaveTo="opacity-0 scale-95 translate-y-4"
             >
-              <Dialog.Panel className={`w-full ${maxWidth} transform rounded-[2rem] glass p-8 text-left align-middle shadow-2xl transition-all border border-white/10`}>
-                <div className="flex items-center justify-between mb-6">
-                  <Dialog.Title as="h3" className="text-2xl font-bold text-white tracking-tight">
+              <Dialog.Panel className={`w-full ${maxWidth} transform rounded-2xl sm:rounded-[2rem] glass p-6 sm:p-8 text-left align-middle shadow-2xl transition-all border border-white/10`}>
+                <div className="flex items-center justify-between mb-4 sm:mb-6 gap-4">
+                  <Dialog.Title as="h3" className="text-xl sm:text-2xl font-bold text-white tracking-tight line-clamp-2">
                     {title}
                   </Dialog.Title>
                   <button
                     onClick={closeModal}
-                    className="p-2.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+                    className="p-2 sm:p-2.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 flex-shrink-0"
                   >
                     <X size={20} />
                   </button>
                 </div>
                 
-                <div className="relative">
+                <div className="relative overflow-y-auto max-h-[calc(100vh-200px)] sm:max-h-[calc(100vh-250px)]">
                   {children}
                 </div>
               </Dialog.Panel>

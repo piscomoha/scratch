@@ -146,7 +146,7 @@ const StagiaireDetails = ({ stagiaireId }) => {
               <p className="text-xs font-medium text-500 mt-1">{stagiaire.filiere?.libelle}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="p-6 rounded-[2rem] bg-overlay border border-border">
                 <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-2">Groupe</p>
                 <p className="text-2xl font-black text-100">{stagiaire.groupe}</p>

@@ -1,11 +1,13 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useSidebar } from '../../context/SidebarContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { motion } from 'framer-motion';
 
 const MainLayout = () => {
   const { isAuthenticated, loading } = useAuth();
+  const { isOpen: isSidebarOpen, closeSidebar } = useSidebar();
 
   if (loading) {
     return (
@@ -26,10 +28,22 @@ const MainLayout = () => {
 
   return (
     <div className="min-h-screen bg-background flex overflow-x-hidden">
+      {/* Overlay for mobile sidebar */}
+      {isSidebarOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={closeSidebar}
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+        />
+      )}
+      
       <Sidebar />
-      <div className="flex-1 lg:ml-72 flex flex-col min-h-screen">
+      
+      <div className="flex-1 flex flex-col min-h-screen lg:pl-[18rem]">
         <Header />
-        <main className="flex-1 px-8 py-4 overflow-y-auto">
+        <main className="flex-1 px-4 sm:px-6 md:px-8 py-4 sm:py-6 overflow-x-hidden overflow-y-auto w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

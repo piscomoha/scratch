@@ -24,7 +24,7 @@ const StageInfoModal = ({ stage, isOpen, onClose }) => {
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-xl glass rounded-[3rem] p-10 border border-border shadow-2xl overflow-hidden"
+        className="relative w-full max-w-xl glass rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 border border-border shadow-2xl overflow-y-auto max-h-[90vh]"
       >
         <div className="absolute top-0 right-0 p-12 opacity-[0.03] text-primary rotate-12 pointer-events-none">
           <Building size={200} />
@@ -47,7 +47,7 @@ const StageInfoModal = ({ stage, isOpen, onClose }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 relative z-10">
           <div className="space-y-6">
             <div className="space-y-1">
               <label className="text-[10px] font-black uppercase tracking-widest text-500 flex items-center gap-2">
@@ -307,7 +307,7 @@ const NotesList = () => {
           <BookOpen size={180} />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 relative z-10">
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Filière</label>
             <CustomSelect
@@ -344,7 +344,7 @@ const NotesList = () => {
               onChange={setSemestre}
             />
           </div>
-          <div className="md:col-span-2 space-y-2">
+          <div className="sm:col-span-2 lg:col-span-2 space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Module</label>
             <CustomSelect
               options={[

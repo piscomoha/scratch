@@ -172,7 +172,7 @@ const PresencesList = () => {
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 mt-8 pt-8 border-t border-border items-end">
-          <div className="w-full md:w-auto grid grid-cols-2 gap-4">
+          <div className="w-full md:w-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Date</label>
               <div className="relative">

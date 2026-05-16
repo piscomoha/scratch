@@ -260,18 +260,18 @@ const StagiaireForm = ({ filieres, onClose, initialData = null }) => {
         </div>
       </div>
 
-      <div className="flex justify-end gap-4 mt-10 pt-6 border-t border-border">
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 mt-8 sm:mt-10 pt-6 border-t border-border">
         <button
           type="button"
           onClick={onClose}
-          className="px-6 py-3 text-400 hover:text-100 hover:bg-overlay-hover rounded-2xl transition-all font-bold text-xs uppercase tracking-widest"
+          className="px-6 py-3 sm:py-3 text-400 hover:text-100 hover:bg-overlay-hover rounded-xl sm:rounded-2xl transition-all font-bold text-xs uppercase tracking-widest text-center w-full sm:w-auto"
         >
           Annuler
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="px-10 py-3 bg-primary hover:bg-primary/90 text-white rounded-2xl transition-all font-black text-xs uppercase tracking-[0.2em] flex items-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-8 sm:px-10 py-3 sm:py-3 bg-primary hover:bg-primary/90 text-white rounded-xl sm:rounded-2xl transition-all font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
         >
           {isPending ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} strokeWidth={3} />}
           {isEditing ? 'Mettre à jour' : 'Enregistrer'}

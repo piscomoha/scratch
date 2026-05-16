@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { SidebarProvider } from './context/SidebarContext';
 import App from './App.jsx';
 import './index.css';
 
@@ -25,8 +26,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <ThemeProvider>
             <NotificationProvider>
-              <App />
-              <Toaster position="top-right" />
+              <SidebarProvider>
+                <App />
+                <Toaster position="top-right" />
+              </SidebarProvider>
             </NotificationProvider>
           </ThemeProvider>
         </AuthProvider>
