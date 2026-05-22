@@ -2,56 +2,86 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ============================================
+   OFPPT Brand Colors — extracted from logo
+   🟢 Green  #2E8B57  | 🔵 Blue  #2660A4
+   ⬜ Gray   #8C9BA8  | ⚫ Black  #1A1A1A
+   ============================================ */
+
 :root {
-  --color-primary: #8B5CF6;
-  --color-secondary: #3B82F6;
-  --background: #09090B;
-  --surface: #18181B;
-  --glass: rgba(24, 24, 27, 0.7);
-  --border: rgba(255, 255, 255, 0.1);
-  --text-100: #F4F4F5;
-  --text-200: #E4E4E7;
-  --text-400: #A1A1AA;
-  --text-500: #71717A;
-  --overlay: rgba(255, 255, 255, 0.03);
-  --overlay-hover: rgba(255, 255, 255, 0.08);
-  --input-bg: rgba(255, 255, 255, 0.03);
-  --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  /* Brand */
+  --color-primary:   #2E8B57;   /* Forest Green — CTAs, active states */
+  --color-secondary: #2660A4;   /* Steel Blue   — headers, nav, links */
+  --color-gray-brand:#8C9BA8;   /* Silver Gray  — borders, icons, dividers */
+  --color-accent:    #1C3F6E;   /* Dark Navy    — captions, taglines */
+
+  /* Surfaces */
+  --background:  #F0F2F5;
+  --surface:     #FFFFFF;
+  --glass:       rgba(255, 255, 255, 0.97);
+  --border:      #DDE1E7;
+  --border-soft: rgba(140, 155, 168, 0.2);
+
+  /* Text */
+  --text-100: #1A1A1A;
+  --text-200: #2D3748;
+  --text-400: #5A6B7A;
+  --text-500: #8C9BA8;
+
+  /* States */
+  --overlay:        rgba(38,  96, 164, 0.03);
+  --overlay-hover:  rgba(38,  96, 164, 0.07);
+  --input-bg:       #FFFFFF;
+  --card-shadow:    0 2px 8px rgba(26, 26, 26, 0.06), 0 1px 3px rgba(26, 26, 26, 0.04);
+  --card-shadow-lg: 0 8px 24px rgba(26, 26, 26, 0.10), 0 3px 8px rgba(26, 26, 26, 0.06);
 }
 
-:root.light {
-  --background: #F8FAFC;
-  --surface: #FFFFFF;
-  --glass: rgba(255, 255, 255, 0.8);
-  --border: rgba(0, 0, 0, 0.08);
-  --text-100: #0F172A;
-  --text-200: #1E293B;
-  --text-400: #64748B;
-  --text-500: #94A3B8;
-  --overlay: rgba(0, 0, 0, 0.03);
-  --overlay-hover: rgba(0, 0, 0, 0.05);
-  --input-bg: #FFFFFF;
-  --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+:root.dark {
+  --color-primary:   #3AA870;
+  --color-secondary: #3A7ACC;
+  --color-gray-brand:#8C9BA8;
+  --color-accent:    #5B8DD9;
+
+  --background:  #0F1117;
+  --surface:     #1A1D24;
+  --glass:       rgba(26, 29, 36, 0.95);
+  --border:      rgba(255, 255, 255, 0.08);
+  --border-soft: rgba(255, 255, 255, 0.05);
+
+  --text-100: #F0F2F5;
+  --text-200: #CBD5E0;
+  --text-400: #8C9BA8;
+  --text-500: #5A6B7A;
+
+  --overlay:        rgba(255, 255, 255, 0.03);
+  --overlay-hover:  rgba(255, 255, 255, 0.07);
+  --input-bg:       rgba(255, 255, 255, 0.04);
+  --card-shadow:    0 2px 12px rgba(0, 0, 0, 0.4);
+  --card-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 @theme {
-  --color-primary: var(--color-primary);
-  --color-secondary: var(--color-secondary);
+  --color-primary:    var(--color-primary);
+  --color-secondary:  var(--color-secondary);
+  --color-gray-brand: var(--color-gray-brand);
+  --color-accent:     var(--color-accent);
   --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-glass: var(--glass);
-  --color-border: var(--border);
-  --color-input: var(--input-bg);
-  
-  /* Semantic Text Colors mapped to Tailwind classes */
+  --color-surface:    var(--surface);
+  --color-glass:      var(--glass);
+  --color-border:     var(--border);
+  --color-input:      var(--input-bg);
+
+  /* Semantic text */
   --color-100: var(--text-100);
   --color-200: var(--text-200);
   --color-400: var(--text-400);
   --color-500: var(--text-500);
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans:  'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
 }
 
+/* ===================== BASE ===================== */
 @layer base {
   html {
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -61,219 +91,243 @@
   body {
     @apply bg-background antialiased;
     color: var(--text-100);
+    font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* Global Form Elements Fix - Responsive */
   input, select, textarea {
     background-color: var(--input-bg);
-    @apply text-100 border-border placeholder:text-500 transition-all duration-200 text-xs sm:text-sm;
+    border-color: var(--border);
+    @apply text-100 placeholder:text-500 transition-all duration-200 text-sm;
   }
 
-  /* Specific fix for browser-default selects/inputs */
   input:focus, select:focus, textarea:focus {
-    @apply outline-none ring-2 ring-primary/20 border-primary;
+    @apply outline-none ring-2 ring-primary/30 border-primary;
   }
 
-  /* Custom Selection */
   ::selection {
-    @apply bg-primary/30 text-100;
+    background: rgba(46, 139, 87, 0.2);
+    color: var(--text-100);
   }
 
-  /* Premium Scrollbar - Enhanced for mobile */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
+  ::-webkit-scrollbar       { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
     background-color: var(--border);
-    @apply rounded-full hover:opacity-80 transition-all;
+    border-radius: 99px;
   }
 
-  /* Responsive Typography */
-  h1 {
-    @apply text-2xl sm:text-3xl md:text-4xl;
-  }
-
-  h2 {
-    @apply text-xl sm:text-2xl md:text-3xl;
-  }
-
-  h3 {
-    @apply text-lg sm:text-xl md:text-2xl;
-  }
-
-  p, span {
-    @apply text-xs sm:text-sm;
-  }
-
-  /* Touch-friendly button/link sizing for mobile */
-  button, a, [role="button"] {
-    @apply min-h-[44px] md:min-h-auto;
-  }
+  h1 { @apply text-2xl sm:text-3xl md:text-4xl; }
+  h2 { @apply text-xl sm:text-2xl md:text-3xl; }
+  h3 { @apply text-lg sm:text-xl; }
 }
 
+/* ==================== UTILITIES ==================== */
 @layer utilities {
+
+  /* Card / glass surface */
   .glass {
-    @apply bg-glass backdrop-blur-xl border border-border;
+    background-color: var(--glass);
+    border: 1px solid var(--border);
     box-shadow: var(--card-shadow);
   }
-  
-  .glass-hover {
-    transition: all 0.3s ease;
+  .glass-lg {
+    background-color: var(--glass);
+    border: 1px solid var(--border);
+    box-shadow: var(--card-shadow-lg);
   }
+  .glass-hover { transition: all 0.25s ease; }
   .glass-hover:hover {
     background-color: var(--overlay-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow-lg);
   }
 
-  /* Ensure text utilities use variables */
+  /* Text helpers */
   .text-100 { color: var(--text-100); }
   .text-200 { color: var(--text-200); }
   .text-400 { color: var(--text-400); }
   .text-500 { color: var(--text-500); }
+  .text-accent { color: var(--color-accent); }
+  .text-brand-gray { color: var(--color-gray-brand); }
 
-  .bg-overlay { background-color: var(--overlay); }
+  /* Background helpers */
+  .bg-overlay       { background-color: var(--overlay); }
   .bg-overlay-hover:hover { background-color: var(--overlay-hover); }
-  .bg-input { background-color: var(--input-bg); }
+  .bg-input         { background-color: var(--input-bg); }
+  .bg-surface       { background-color: var(--surface); }
 
+  /* Gradient text */
   .text-gradient {
-    @apply bg-gradient-to-br from-100 to-500 bg-clip-text text-transparent;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #2E8B57, #8C9BA8, #2660A4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
+  /* Primary glow for CTAs */
   .glow-primary {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+    box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.15), 0 4px 16px rgba(46, 139, 87, 0.2);
+  }
+  .glow-secondary {
+    box-shadow: 0 0 0 3px rgba(38, 96, 164, 0.15), 0 4px 16px rgba(38, 96, 164, 0.2);
   }
 
+  /* ─── Diamond / rhombus decorative elements ─── */
+  .diamond {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    transform: rotate(45deg);
+    border-radius: 3px;
+  }
+  .diamond-sm  { width: 8px;  height: 8px; }
+  .diamond-md  { width: 16px; height: 16px; }
+  .diamond-lg  { width: 28px; height: 28px; }
+  .diamond-xl  { width: 48px; height: 48px; }
+  .diamond-2xl { width: 80px; height: 80px; }
+
+  /* Repeating diamond pattern background */
+  .bg-diamond-pattern {
+    background-color: var(--background);
+    background-image:
+      linear-gradient(45deg, rgba(38, 96, 164, 0.04) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(38, 96, 164, 0.04) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(46, 139, 87, 0.04) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(46, 139, 87, 0.04) 75%);
+    background-size: 24px 24px;
+    background-position: 0 0, 0 12px, 12px -12px, -12px 0px;
+  }
+
+  /* ─── Shimmer skeleton ─── */
   .shimmer {
     background: linear-gradient(
       90deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.05) 50%,
-      rgba(255, 255, 255, 0) 100%
+      transparent 0%,
+      rgba(140, 155, 168, 0.12) 50%,
+      transparent 100%
     );
     background-size: 200% 100%;
-    animation: shimmer 2s infinite linear;
+    animation: shimmer 1.8s infinite linear;
   }
 
-  /* Responsive container utility */
-  .container-responsive {
-    @apply w-full px-4 sm:px-6 md:px-8 lg:px-0;
-  }
-
-  /* Visually hidden but accessible */
-  .sr-only {
+  /* ─── Sidebar active indicator strip ─── */
+  .nav-active-bar {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    border-radius: 0 3px 3px 0;
+    background: var(--color-primary);
   }
 
-  /* Custom scrollbar for tables */
+  /* ─── Brand badge ─── */
+  .badge-primary {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: rgba(46, 139, 87, 0.12);
+    color: var(--color-primary);
+  }
+  .badge-secondary {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: rgba(38, 96, 164, 0.12);
+    color: var(--color-secondary);
+  }
+  .badge-gray {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    background: rgba(140, 155, 168, 0.15);
+    color: var(--color-gray-brand);
+  }
+
+  /* ─── Responsive spacing ─── */
+  .container-responsive { @apply w-full px-4 sm:px-6 md:px-8 lg:px-0; }
+  .gap-responsive        { @apply gap-3 sm:gap-4 md:gap-6; }
+  .p-responsive          { @apply p-4 sm:p-6 md:p-8; }
+
+  /* ─── Custom scrollbar for tables ─── */
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: var(--border) transparent;
   }
-
-  .custom-scrollbar::-webkit-scrollbar {
-    height: 6px;
-    width: 6px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
+  .custom-scrollbar::-webkit-scrollbar       { height: 5px; width: 5px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background-color: var(--border);
-    border-radius: 3px;
+    border-radius: 99px;
   }
 
-  /* Responsive spacing utilities */
-  @each $breakpoint in ['sm', 'md', 'lg', 'xl', '2xl'] {
-    .gap-responsive {
-      @apply gap-3 sm:gap-4 md:gap-6 lg:gap-8;
-    }
+  /* ─── Button variants ─── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 font-bold rounded-xl
+           px-5 py-2.5 text-sm text-white transition-all duration-200;
+    background: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(46, 139, 87, 0.3);
+  }
+  .btn-primary:hover {
+    background: #27784c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(46, 139, 87, 0.4);
+  }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
-    .p-responsive {
-      @apply p-4 sm:p-6 md:p-8;
-    }
-
-    .px-responsive {
-      @apply px-4 sm:px-6 md:px-8;
-    }
-
-    .py-responsive {
-      @apply py-4 sm:py-6 md:py-8;
-    }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 font-semibold rounded-xl
+           px-5 py-2.5 text-sm transition-all duration-200;
+    background: var(--overlay);
+    color: var(--text-200);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover {
+    background: var(--overlay-hover);
+    border-color: var(--color-gray-brand);
   }
 
-  /* Mobile-first button size reduction */
-  .btn-sm-mobile {
-    @apply text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2;
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 font-bold rounded-xl
+           px-5 py-2.5 text-sm text-white transition-all duration-200;
+    background: #DC2626;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+  }
+  .btn-danger:hover { background: #B91C1C; transform: translateY(-1px); }
+
+  /* ─── Accessibility ─── */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
   }
 
-  .btn-md-mobile {
-    @apply text-xs sm:text-sm px-3 sm:px-4 py-2 sm:py-2.5;
-  }
-
-  .btn-lg-mobile {
-    @apply text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3;
-  }
-
-  /* Focus visible ring for accessibility */
   @supports selector(:focus-visible) {
-    button:focus-visible,
-    a:focus-visible,
-    input:focus-visible {
-      @apply ring-2 ring-offset-2 ring-primary;
+    button:focus-visible, a:focus-visible, input:focus-visible {
+      @apply outline-none ring-2 ring-offset-2 ring-primary;
     }
   }
 
-  /* Responsive grid utilities */
-  .grid-auto-responsive {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
-  }
-
-  .grid-auto-2-responsive {
-    @apply grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6;
-  }
-
-  .grid-auto-4-responsive {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6;
-  }
+  /* ─── Grid helpers ─── */
+  .grid-auto-2  { @apply grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6; }
+  .grid-auto-3  { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6; }
+  .grid-auto-4  { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6; }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* ==================== ANIMATIONS ==================== */
+@keyframes shimmer   { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes float     { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes diamond-spin { 0% { transform: rotate(45deg); } 100% { transform: rotate(405deg); } }
+@keyframes fadeInUp  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(46,139,87,0.4); }
+  70%  { box-shadow: 0 0 0 8px rgba(46,139,87,0); }
+  100% { box-shadow: 0 0 0 0 rgba(46,139,87,0); }
 }
 
-/* Tablet and mobile optimizations */
-@media (max-width: 640px) {
-  body {
-    font-size: 14px;
-  }
-
-  /* Reduce padding on very small screens */
-  .glass {
-    border-radius: 1rem;
-  }
-}
-
-/* Large screen optimizations */
-@media (min-width: 1536px) {
-  .glass {
-    border-radius: 2rem;
-  }
-}
-
-
-
+.animate-float       { animation: float 4s ease-in-out infinite; }
+.animate-fade-in-up  { animation: fadeInUp 0.5s ease-out forwards; }
+.animate-pulse-ring  { animation: pulse-ring 2s cubic-bezier(0.455,0.03,0.515,0.955) infinite; }

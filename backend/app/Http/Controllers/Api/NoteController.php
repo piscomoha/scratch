@@ -7,6 +7,7 @@ use App\Http\Requests\StoreNoteRequest;
 use App\Http\Resources\NoteResource;
 use App\Models\Note;
 use App\Models\Stagiaire;
+use App\Models\Notification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -64,6 +65,17 @@ class NoteController extends Controller
 
         $note = Note::create($data);
         $note->load(['stagiaire', 'module']);
+
+        // Send notification to stagiaire
+        if ($note->stagiaire && $note->stagiaire->user_id) {
+            \App\Models\Notification::create([
+                'user_id' => $note->stagiaire->user_id,
+                'title' => 'Nouvelle note enregistrée',
+                'message' => "Votre note pour le module {$note->module->intitule} a été publiée.",
+                'type' => 'success',
+                'link' => '/dashboard'
+            ]);
+        }
 
         return response()->json([
             'message' => 'Note enregistrée avec succès.',

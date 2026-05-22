@@ -40,19 +40,24 @@ const StagesList = () => {
     <div className="space-y-8 pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-100 mb-2">Stages</h1>
-          <p className="text-500 font-medium">Suivi des périodes en entreprise (PFE & PF)</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2E8B57', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#8C9BA8', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2660A4', borderRadius:1 }} />
+            <span className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Périodes en entreprise</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-100">Stages</h1>
+          <p className="text-400 text-sm mt-0.5">Suivi des périodes en entreprise (PFE & PF)</p>
         </div>
-        
         {user?.role === 'admin' && (
-          <button className="bg-primary hover:bg-primary/90 text-white px-6 py-3.5 rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-primary/20 transition-all hover:-translate-y-1">
-            <Plus size={20} strokeWidth={3} /> Ajouter un stage
+          <button className="btn-primary flex-shrink-0">
+            <Plus size={16} strokeWidth={2.5} /> Ajouter un stage
           </button>
         )}
       </div>
 
       {/* Filters Section */}
-      <div className="glass rounded-[2.5rem] p-6">
+      <div className="glass rounded-2xl p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Statut</label>
@@ -94,7 +99,7 @@ const StagesList = () => {
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="col-span-full py-20 text-center glass rounded-[2.5rem]"
+                className="col-span-full py-20 text-center glass rounded-2xl"
               >
                 <Briefcase className="w-12 h-12 text-500 mx-auto mb-4" />
                 <p className="text-500 font-bold uppercase tracking-widest text-sm">Aucun stage trouvé</p>
@@ -107,7 +112,7 @@ const StagesList = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   whileHover={{ y: -6 }}
-                  className="glass rounded-[2.5rem] overflow-hidden flex flex-col group transition-all duration-300"
+                  className="glass rounded-2xl overflow-hidden flex flex-col group transition-all duration-300"
                 >
                   {/* Card Header */}
                   <div className="p-8 pb-4 relative">
@@ -194,7 +199,7 @@ const StagesList = () => {
                        <Eye size={16} /> Détails
                      </button>
                      {user?.role === 'admin' && (
-                       <button className="flex-1 py-3.5 px-4 rounded-2xl text-xs font-black uppercase tracking-widest text-background bg-100 hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                       <button className="flex-1 py-3.5 px-4 rounded-xl text-xs font-black uppercase tracking-widest text-white bg-primary hover:bg-primary/90 transition-all flex items-center justify-center gap-2">
                          <Edit2 size={16} /> Gérer
                        </button>
                      )}

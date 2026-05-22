@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Affectation;
 use App\Models\User;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -44,6 +45,15 @@ class AffectationController extends Controller
                 'groupe' => $aff['groupe'],
             ]);
         }
+
+        // Créer une notification pour le formateur
+        Notification::create([
+            'user_id' => $userId,
+            'title' => 'Mise à jour de vos affectations',
+            'message' => 'L\'administrateur a mis à jour vos groupes affectés. Veuillez consulter votre tableau de bord.',
+            'type' => 'info',
+            'link' => '/dashboard',
+        ]);
 
         return response()->json([
             'message' => 'Affectations mises à jour avec succès.',

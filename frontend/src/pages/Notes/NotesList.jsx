@@ -297,12 +297,18 @@ const NotesList = () => {
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-100 mb-2">Gestion des Notes</h1>
-          <p className="text-500 font-medium">Saisie des évaluations (CC & Synthèse) avec calcul automatique</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2E8B57', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#8C9BA8', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2660A4', borderRadius:1 }} />
+            <span className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Évaluation</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-100">Gestion des Notes</h1>
+          <p className="text-400 text-sm mt-0.5">Saisie des évaluations (CC & Synthèse) avec calcul automatique</p>
         </div>
       </div>
 
-      <div className="glass rounded-[2.5rem] p-8 relative overflow-hidden">
+      <div className="glass rounded-2xl p-6 sm:p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] text-primary rotate-12 pointer-events-none">
           <BookOpen size={180} />
         </div>
@@ -362,14 +368,13 @@ const NotesList = () => {
           </div>
         </div>
         
-        <div className="mt-10 pt-8 border-t border-border flex justify-end">
+        <div className="mt-8 pt-8 border-t border-border flex justify-end">
           <button 
             onClick={chargerStagiairesEtNotes} 
             disabled={loading}
-            className="group relative overflow-hidden bg-primary text-white px-12 py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/30 disabled:opacity-50 flex items-center gap-3"
+            className="btn-primary py-3.5 px-8"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BookOpen size={20} className="group-hover:rotate-12 transition-transform" />}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BookOpen size={18} />}
             Afficher la liste
           </button>
         </div>
@@ -381,7 +386,7 @@ const NotesList = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="glass rounded-[2.5rem] overflow-hidden flex flex-col"
+            className="glass rounded-2xl overflow-hidden flex flex-col"
           >
             <div className="p-6 border-b border-border flex flex-col md:flex-row justify-between items-center bg-overlay gap-6">
               <div className="flex flex-col md:flex-row items-center gap-3">
@@ -410,7 +415,7 @@ const NotesList = () => {
                   <button 
                     onClick={sauvegarderNotes} 
                     disabled={loading}
-                    className="flex items-center gap-2 text-white bg-primary px-8 py-3 rounded-2xl hover:bg-primary/90 transition-all font-bold text-sm shadow-lg shadow-primary/20"
+                    className="btn-primary px-6 py-2.5"
                   >
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save size={18} />}
                     Sauvegarder
@@ -422,15 +427,15 @@ const NotesList = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-overlay border-b border-border">
-                    <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] w-16">#</th>
-                    <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] min-w-[200px]">Stagiaire</th>
-                    <th className="py-5 px-4 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center">CC1</th>
-                    <th className="py-5 px-4 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center">CC2</th>
-                    <th className="py-5 px-4 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center">CC3</th>
-                    <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center">EFM (Synt.)</th>
-                    {isAnnee2 && <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center">Stage</th>}
-                    <th className="py-5 px-8 text-[10px] font-black text-500 uppercase tracking-[0.2em] text-center bg-overlay">Finale</th>
+                  <tr style={{ background:'rgba(38,96,164,0.05)', borderBottom:'2px solid var(--border)' }}>
+                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap w-16">#</th>
+                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap min-w-[200px]">Stagiaire</th>
+                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">CC1</th>
+                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">CC2</th>
+                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">CC3</th>
+                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">EFM (Synt.)</th>
+                    {isAnnee2 && <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">Stage</th>}
+                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">Finale</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -525,7 +530,7 @@ const NotesList = () => {
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="glass rounded-[2.5rem] p-20 text-center"
+            className="glass rounded-2xl p-20 text-center"
           >
             <div className="flex flex-col items-center gap-4 opacity-30">
               <Users size={64} />

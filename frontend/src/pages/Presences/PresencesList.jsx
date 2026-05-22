@@ -121,13 +121,18 @@ const PresencesList = () => {
     <div className="space-y-8 pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-100 mb-2">Pointage</h1>
-          <p className="text-500 font-medium">Gestion des présences et absences</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2E8B57', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#8C9BA8', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2660A4', borderRadius:1 }} />
+            <span className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Gestion des présences</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-100">Pointage</h1>
+          <p className="text-400 text-sm mt-0.5">Saisie et suivi des présences et absences</p>
         </div>
       </div>
 
-      {/* Filter Controls */}
-      <div className="glass rounded-[2.5rem] p-8">
+      <div className="glass rounded-2xl p-6 sm:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
            <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Filière</label>
@@ -209,7 +214,7 @@ const PresencesList = () => {
             <button 
               onClick={chargerSeance} 
               disabled={loading}
-              className="bg-100 hover:opacity-90 text-background px-8 py-3.5 rounded-2xl font-bold transition-all hover:-translate-y-1 shadow-lg flex items-center gap-2 disabled:opacity-50"
+              className="btn-primary py-3.5 px-8"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 fill-current" />}
               Démarrer le pointage
@@ -239,7 +244,7 @@ const PresencesList = () => {
               <button 
                 onClick={sauvegarderPresences} 
                 disabled={loading || user?.role === 'stagiaire'}
-                className="bg-primary hover:bg-primary/90 text-white px-8 py-3.5 rounded-2xl font-black shadow-lg shadow-primary/20 transition-all hover:-translate-y-1 flex items-center gap-2"
+                className="btn-primary px-8 py-3.5"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check size={20} strokeWidth={3} />}
                 Enregistrer le pointage

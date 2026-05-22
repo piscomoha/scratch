@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\FiliereModuleController;
 use App\Http\Controllers\Api\AffectationController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,6 +30,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
     // Filières et Modules (accessibles par tous les authentifiés)
     Route::get('/filieres', [FiliereModuleController::class, 'filieres']);
@@ -60,6 +66,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Users
         Route::get('/users', [UserController::class, 'index']);
         Route::get('/users/formateurs', [UserController::class, 'formateurs']);
+        Route::post('/users', [UserController::class, 'store']);
+        Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
         // Documents
         Route::get('/documents', [DocumentController::class, 'index']);

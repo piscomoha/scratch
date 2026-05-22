@@ -71,8 +71,14 @@ const Settings = () => {
     <div className="space-y-8 pb-20 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-100 mb-2">Paramètres</h1>
-          <p className="text-500 font-medium">Gérez votre profil et les préférences de votre compte</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2E8B57', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#8C9BA8', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2660A4', borderRadius:1 }} />
+            <span className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Configuration</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-100">Paramètres</h1>
+          <p className="text-400 text-sm mt-0.5">Gérez votre profil et les préférences de votre compte</p>
         </div>
       </div>
 
@@ -107,7 +113,7 @@ const Settings = () => {
               initial="hidden"
               animate="visible"
               exit="hidden"
-              className="glass rounded-[2.5rem] p-8 md:p-10 border border-border"
+              className="glass rounded-2xl p-8 md:p-10 border border-border"
             >
               {activeTab === 'profile' && (
                 <div className="space-y-8">
@@ -160,7 +166,7 @@ const Settings = () => {
                   <div className="flex justify-end pt-4">
                     <button 
                       onClick={handleSave}
-                      className="bg-primary hover:bg-primary/90 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all hover:-translate-y-1 flex items-center gap-2"
+                      className="btn-primary"
                     >
                       <Save size={20} /> Enregistrer les modifications
                     </button>
@@ -171,7 +177,7 @@ const Settings = () => {
               {activeTab === 'appearance' && (
                 <div className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className={`p-8 rounded-[2.5rem] border-2 transition-all duration-300 cursor-pointer ${theme === 'dark' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`} onClick={() => theme !== 'dark' && toggleTheme()}>
+                    <div className={`p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${theme === 'dark' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`} onClick={() => theme !== 'dark' && toggleTheme()}>
                       <div className="flex justify-between items-start mb-6">
                         <div className="p-4 rounded-2xl bg-zinc-900 text-amber-400">
                           <Moon size={24} />
@@ -182,7 +188,7 @@ const Settings = () => {
                       <p className="text-sm text-500 font-medium">Réduit la fatigue oculaire et économise de l'énergie.</p>
                     </div>
 
-                    <div className={`p-8 rounded-[2.5rem] border-2 transition-all duration-300 cursor-pointer ${theme === 'light' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`} onClick={() => theme !== 'light' && toggleTheme()}>
+                    <div className={`p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${theme === 'light' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`} onClick={() => theme !== 'light' && toggleTheme()}>
                       <div className="flex justify-between items-start mb-6">
                         <div className="p-4 rounded-2xl bg-zinc-100 text-amber-600">
                           <Sun size={24} />
@@ -194,7 +200,7 @@ const Settings = () => {
                     </div>
                   </div>
 
-                  <div className="p-8 rounded-[2.5rem] bg-overlay border border-border flex items-center justify-between">
+                  <div className="p-8 rounded-2xl bg-overlay border border-border flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-violet-500/10 text-violet-400 rounded-2xl">
                         <SettingsIcon size={24} />
@@ -237,7 +243,7 @@ const Settings = () => {
 
               {activeTab === 'security' && (
                 <div className="space-y-8">
-                  <div className="p-8 rounded-[2.5rem] bg-emerald-500/5 border border-emerald-500/10 flex items-center gap-4 mb-2">
+                  <div className="p-8 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 flex items-center gap-4 mb-2">
                     <div className="p-3 bg-emerald-500/20 text-emerald-400 rounded-2xl">
                       <Shield size={24} />
                     </div>
@@ -330,7 +336,7 @@ const Settings = () => {
                     </div>
                   </div>
 
-                  <div className="p-8 rounded-[2.5rem] bg-overlay border border-border">
+                  <div className="p-8 rounded-2xl bg-overlay border border-border">
                     <h4 className="font-bold text-100 mb-4">Fonctionnalités Bêta</h4>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
@@ -347,7 +353,7 @@ const Settings = () => {
 
               {activeTab === 'danger' && (
                 <div className="space-y-8">
-                  <div className="p-8 rounded-[2.5rem] bg-red-500/5 border border-red-500/10 flex items-center gap-6">
+                  <div className="p-8 rounded-2xl bg-red-500/5 border border-red-500/10 flex items-center gap-6">
                     <div className="p-4 bg-red-500/20 text-red-500 rounded-3xl">
                       <Trash2 size={32} />
                     </div>

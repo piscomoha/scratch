@@ -50,11 +50,13 @@ const Documents = () => {
   const [uploadForm, setUploadForm] = useState({
     title: '',
     category: 'schedule',
+    shared_with: 'all',
     filiere_id: '',
     module_id: '',
     groupe: '',
     annee_formation: '',
     file: null,
+    notify: false
   });
 
   const [filterModules, setFilterModules] = useState([]);
@@ -146,11 +148,13 @@ const Documents = () => {
     const formData = new FormData();
     formData.append('title', uploadForm.title);
     formData.append('category', uploadForm.category);
+    formData.append('shared_with', uploadForm.shared_with);
     if (uploadForm.filiere_id) formData.append('filiere_id', uploadForm.filiere_id);
     if (uploadForm.module_id) formData.append('module_id', uploadForm.module_id);
     if (uploadForm.groupe) formData.append('groupe', uploadForm.groupe);
     if (uploadForm.annee_formation) formData.append('annee_formation', uploadForm.annee_formation);
     formData.append('file', uploadForm.file);
+    if (uploadForm.notify) formData.append('notify', 'true');
 
     setUploading(true);
     try {
@@ -159,7 +163,7 @@ const Documents = () => {
       });
       notify('success', 'Succès', 'Document importé avec succès.');
       setIsUploadModalOpen(false);
-      setUploadForm({ title: '', category: 'schedule', filiere_id: '', groupe: '', annee_formation: '', file: null });
+      setUploadForm({ title: '', category: 'schedule', shared_with: 'all', filiere_id: '', module_id: '', groupe: '', annee_formation: '', file: null, notify: false });
       fetchDocuments();
     } catch (error) {
       notify('error', 'Erreur', error.response?.data?.message || 'Erreur lors de l\'importation.');
@@ -234,20 +238,26 @@ const Documents = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-100 mb-2">Ressources & Plannings</h1>
-          <p className="text-500 font-medium">Gestion documentaire et informations des formateurs</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2E8B57', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#8C9BA8', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2660A4', borderRadius:1 }} />
+            <span className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Ressources</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-100">Ressources & Plannings</h1>
+          <p className="text-400 text-sm mt-0.5">Gestion documentaire et informations des formateurs</p>
         </div>
         
-        <div className="flex items-center gap-2 bg-input p-1 rounded-2xl border border-border">
+        <div className="flex items-center gap-1 bg-input p-1.5 rounded-xl border border-border">
           <button 
             onClick={() => setActiveTab('documents')}
-            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'documents' ? 'bg-primary text-white shadow-lg' : 'text-500 hover:text-100'}`}
+            className={`px-5 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'documents' ? 'bg-[#2660A4] text-white shadow-sm' : 'text-500 hover:text-100'}`}
           >
             Documents
           </button>
           <button 
             onClick={() => setActiveTab('formateurs')}
-            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'formateurs' ? 'bg-primary text-white shadow-lg' : 'text-500 hover:text-100'}`}
+            className={`px-5 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'formateurs' ? 'bg-[#2660A4] text-white shadow-sm' : 'text-500 hover:text-100'}`}
           >
             Formateurs
           </button>
@@ -294,7 +304,7 @@ const Documents = () => {
 
           {/* Filters & Actions */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-2">
-            <div className="flex-1 w-full glass rounded-[2.5rem] p-6">
+            <div className="flex-1 w-full glass rounded-2xl p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <div className="relative group">
                   <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 mb-2 block">Recherche</label>
@@ -387,9 +397,9 @@ const Documents = () => {
             
             <button 
               onClick={() => setIsUploadModalOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-[2rem] flex items-center gap-2 font-black shadow-lg shadow-primary/20 transition-all hover:-translate-y-1 w-full md:w-auto justify-center h-[92px] shrink-0"
+              className="btn-primary w-full md:w-auto justify-center h-[92px] shrink-0"
             >
-              <UploadCloud size={24} strokeWidth={3} /> Importer
+              <UploadCloud size={20} strokeWidth={3} /> Importer
             </button>
           </div>
 
@@ -400,7 +410,7 @@ const Documents = () => {
               <p className="font-bold tracking-widest text-xs uppercase">Chargement...</p>
             </div>
           ) : documents.length === 0 ? (
-            <div className="glass rounded-[2.5rem] py-20 flex flex-col items-center text-center px-4 mt-6">
+            <div className="glass rounded-2xl py-20 flex flex-col items-center text-center px-4 mt-6">
               <div className="w-20 h-20 rounded-full bg-overlay flex items-center justify-center mb-6 text-500">
                 <Folder size={32} />
               </div>
@@ -420,15 +430,13 @@ const Documents = () => {
                     className="glass rounded-3xl p-6 group hover:border-primary/30 transition-all duration-300 relative flex flex-col"
                   >
                     <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {doc.category === 'schedule' && (
                         <button 
                           onClick={() => { setDocToDistribute(doc); setIsDistributeModalOpen(true); }}
                           className="p-2 rounded-xl bg-overlay hover:bg-primary hover:text-white text-primary transition-colors"
-                          title="Envoyer le planning"
+                          title="Diffuser le document"
                         >
                           <Send size={16} />
                         </button>
-                      )}
                       <a 
                         href={doc.file_url} 
                         target="_blank" 
@@ -471,6 +479,15 @@ const Documents = () => {
                       <span className="px-2 py-1 rounded-lg bg-overlay text-[9px] font-black uppercase tracking-widest text-400">
                         {categories.find(c => c.value === doc.category)?.label || doc.category}
                       </span>
+                      {doc.shared_with && (
+                        <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                          doc.shared_with === 'all' ? 'bg-primary/10 text-primary border-primary/20' :
+                          doc.shared_with === 'formateurs' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                          'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                        }`}>
+                          {doc.shared_with === 'all' ? 'Public' : doc.shared_with === 'formateurs' ? 'Formateurs' : 'Stagiaires'}
+                        </span>
+                      )}
                       {doc.filiere && (
                         <span className="px-2 py-1 rounded-lg bg-primary/10 text-[9px] font-black uppercase tracking-widest text-primary border border-primary/20">
                           {doc.filiere.code}
@@ -517,7 +534,7 @@ const Documents = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05 }}
-                className="p-8 rounded-[2.5rem] glass border border-border hover:border-primary/30 transition-all duration-300 group relative overflow-hidden"
+                className="p-8 rounded-2xl glass border border-border hover:border-primary/30 transition-all duration-300 group relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/10 transition-colors" />
                 
@@ -601,7 +618,7 @@ const Documents = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative w-full max-w-xl glass rounded-[2.5rem] p-8 sm:p-10 shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="relative w-full max-w-xl glass rounded-2xl p-8 sm:p-10 shadow-2xl max-h-[90vh] overflow-y-auto"
           >
             <button 
               onClick={() => !uploading && setIsUploadModalOpen(false)}
@@ -637,6 +654,33 @@ const Documents = () => {
                     value={uploadForm.category}
                     onChange={(val) => setUploadForm({...uploadForm, category: val})}
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">Partager avec</label>
+                  <CustomSelect
+                    options={[
+                      { value: 'all', label: 'Tout le monde' },
+                      { value: 'formateurs', label: 'Formateurs uniquement' },
+                      { value: 'stagiaires', label: 'Stagiaires uniquement' }
+                    ]}
+                    value={uploadForm.shared_with}
+                    onChange={(val) => setUploadForm({...uploadForm, shared_with: val})}
+                  />
+                </div>
+                <div className="flex items-center gap-3 pt-6">
+                  <input 
+                    type="checkbox" 
+                    id="notify"
+                    className="w-5 h-5 rounded-lg border-border text-primary focus:ring-primary/20 cursor-pointer"
+                    checked={uploadForm.notify}
+                    onChange={(e) => setUploadForm({...uploadForm, notify: e.target.checked})}
+                  />
+                  <label htmlFor="notify" className="text-xs font-bold text-100 cursor-pointer select-none">
+                    Notifier les destinataires par email/app
+                  </label>
                 </div>
               </div>
 
@@ -756,7 +800,7 @@ const Documents = () => {
                 <button
                   type="submit"
                   disabled={uploading || !uploadForm.file}
-                  className="px-8 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50 transition-all w-full sm:w-auto"
+                  className="btn-primary w-full sm:w-auto"
                 >
                   {uploading ? (
                     <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Envoi...</>
@@ -791,7 +835,7 @@ const Documents = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative w-full max-w-md glass rounded-[2.5rem] p-8 shadow-2xl"
+            className="relative w-full max-w-md glass rounded-2xl p-8 shadow-2xl"
           >
             <button 
               onClick={() => !distributeLoading && setIsDistributeModalOpen(false)}
@@ -804,7 +848,7 @@ const Documents = () => {
               <div className="p-3 rounded-xl bg-primary/20 text-primary">
                 <Send size={24} />
               </div>
-              Diffuser le planning
+              Diffuser le document
             </h2>
             <p className="text-500 text-sm font-medium mb-8">Sélectionnez les destinataires qui recevront une notification pour ce document.</p>
 

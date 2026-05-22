@@ -79,7 +79,7 @@ export const useDashboardStats = () => {
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const { data } = await api.get('/dashboard/stats');
-      return data;
+      return data.data;
     },
   });
 };
@@ -95,6 +95,31 @@ export const useFormateurs = () => {
   });
 };
 
+export const useCreateUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (userData) => {
+      const { data } = await api.post('/users', userData);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['formateurs'] });
+    },
+  });
+};
+
+export const useDeleteUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      await api.delete(`/users/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['formateurs'] });
+    },
+  });
+};
+
 export const useUpdateAffectations = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -104,6 +129,44 @@ export const useUpdateAffectations = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['formateurs'] });
+    },
+  });
+};
+
+// --- Notifications ---
+export const useNotifications = () => {
+  return useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const { data } = await api.get('/notifications');
+      return data.data;
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+};
+
+export const useMarkNotificationRead = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      const { data } = await api.put(`/notifications/${id}/read`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+};
+
+export const useMarkAllNotificationsRead = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.put('/notifications/read-all');
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
 };

@@ -12,6 +12,7 @@ class Document extends Model
         'file_type',
         'file_size',
         'category',
+        'shared_with',
         'filiere_id',
         'user_id',
         'module_id',

@@ -16,33 +16,50 @@ import {
   Edit2,
   Trash2,
   BookOpen,
-  Loader2
+  Loader2,
+  Mail,
+  Lock
 } from 'lucide-react';
 import CustomSelect from '../../components/ui/CustomSelect';
-import { useNotification } from '../../context/NotificationContext';
+import Modal from '../../components/ui/Modal';
+import toast from 'react-hot-toast';
 
-import { useFormateurs, useFilieres, useUpdateAffectations, useStagiaires } from '../../hooks/useQueries';
+import { useFormateurs, useFilieres, useUpdateAffectations, useStagiaires, useCreateUser } from '../../hooks/useQueries';
 
 const Assignments = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filiereFilter, setFiliereFilter] = useState('all');
   const [activeFormateur, setActiveFormateur] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedGroups, setSelectedGroups] = useState([]);
-  const { notify } = useNotification();
+  const [customGroups, setCustomGroups] = useState([]);
+  const [newGroupCode, setNewGroupCode] = useState('');
+  const [newGroupFiliereId, setNewGroupFiliereId] = useState('');
 
   const { data: formateurs, isLoading: loadingFormateurs } = useFormateurs();
   const { data: filieres } = useFilieres();
-  const { data: stagiairesData } = useStagiaires({ per_page: 500 }); // To get all groups
+  const { data: stagiairesData } = useStagiaires({ per_page: 500 });
   const updateMutation = useUpdateAffectations();
+  const createMutation = useCreateUser();
 
-  // Extract unique groups from stagiaires
-  const groups = Array.from(new Set(stagiairesData?.data?.map(s => JSON.stringify({ id: s.groupe, filiere_id: s.filiere_id })) || []))
+  const [newFormateur, setNewFormateur] = useState({ name: '', email: '', password: '' });
+
+  // Extract unique groups from stagiaires and combine with custom added groups
+  const baseGroups = Array.from(new Set(stagiairesData?.data?.map(s => JSON.stringify({ id: s.groupe, filiere_id: s.filiere_id })) || []))
     .map(g => JSON.parse(g));
+    
+  const groups = [...baseGroups, ...customGroups];
 
-  const filteredFormateurs = formateurs?.filter(f => 
-    f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  const filteredFormateurs = formateurs?.filter(f => {
+    const matchesSearch = f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         f.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (filiereFilter === 'all') return matchesSearch;
+    
+    const matchesFiliere = f.affectations?.some(a => a.filiere_id.toString() === filiereFilter);
+    return matchesSearch && matchesFiliere;
+  }) || [];
 
   const handleOpenAssign = (formateur) => {
     setActiveFormateur(formateur);
@@ -51,7 +68,6 @@ const Assignments = () => {
   };
 
   const handleSaveAssignment = () => {
-    // Map selected groups back to their filiere_id
     const affectations = selectedGroups.map(gId => {
       const g = groups.find(x => x.id === gId);
       return {
@@ -65,8 +81,25 @@ const Assignments = () => {
       affectations
     }, {
       onSuccess: () => {
-        notify('success', 'Affectation mise à jour', `Les groupes ont été correctement affectés à ${activeFormateur.name}.`);
+        toast.success('Affectations mises à jour');
         setIsModalOpen(false);
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Erreur lors de la mise à jour des affectations');
+      }
+    });
+  };
+
+  const handleCreateFormateur = (e) => {
+    e.preventDefault();
+    createMutation.mutate(newFormateur, {
+      onSuccess: () => {
+        toast.success('Formateur créé avec succès');
+        setIsCreateModalOpen(false);
+        setNewFormateur({ name: '', email: '', password: '' });
+      },
+      onError: (error) => {
+        toast.error(error.response?.data?.message || 'Erreur lors de la création');
       }
     });
   };
@@ -79,16 +112,44 @@ const Assignments = () => {
     );
   };
 
+  const handleAddCustomGroup = () => {
+    if (!newGroupCode.trim() || !newGroupFiliereId) {
+      toast.error('Veuillez remplir le nom du groupe et la filière.');
+      return;
+    }
+    
+    // Check if group already exists
+    if (groups.some(g => g.id.toLowerCase() === newGroupCode.toLowerCase())) {
+      toast.error('Ce groupe existe déjà.');
+      return;
+    }
+    
+    const newGroup = { id: newGroupCode.trim().toUpperCase(), filiere_id: parseInt(newGroupFiliereId) };
+    setCustomGroups(prev => [...prev, newGroup]);
+    setSelectedGroups(prev => [...prev, newGroup.id]); // auto select it
+    setNewGroupCode('');
+    toast.success('Nouveau groupe ajouté et sélectionné.');
+  };
+
   return (
     <div className="space-y-8 pb-20">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-100 mb-2">Gestion des Affectations</h1>
-          <p className="text-500 font-medium">Associez les formateurs à leurs groupes respectifs</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2E8B57', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#8C9BA8', borderRadius:1 }} />
+            <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2660A4', borderRadius:1 }} />
+            <span className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Administration</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-100">Gestion des Affectations</h1>
+          <p className="text-400 text-sm mt-0.5">Associez les formateurs à leurs groupes respectifs</p>
         </div>
-        <button className="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 transition-all hover:-translate-y-1 flex items-center gap-2">
-          <Plus size={20} /> Nouveau Formateur
+        <button 
+          onClick={() => setIsCreateModalOpen(true)}
+          className="btn-primary flex-shrink-0"
+        >
+          <Plus size={16} strokeWidth={2.5} /> Nouveau Formateur
         </button>
       </div>
 
@@ -97,7 +158,7 @@ const Assignments = () => {
         
         {/* Left Column: Formateurs List */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="glass rounded-[2.5rem] p-8">
+          <div className="glass rounded-2xl p-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8">
               <div className="relative flex-1 group w-full">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
@@ -114,11 +175,10 @@ const Assignments = () => {
                   <CustomSelect 
                     options={[
                       { value: 'all', label: 'Toutes les filières' },
-                      { value: 'dd', label: 'DD' },
-                      { value: 'id', label: 'ID' },
+                      ...(filieres?.map(f => ({ value: f.id.toString(), label: f.code })) || [])
                     ]}
-                    value="all"
-                    onChange={() => {}}
+                    value={filiereFilter}
+                    onChange={(val) => setFiliereFilter(val)}
                   />
                 </div>
               </div>
@@ -130,13 +190,18 @@ const Assignments = () => {
                   <Loader2 className="w-10 h-10 animate-spin mb-4" />
                   <p className="font-bold uppercase tracking-widest text-xs">Chargement des formateurs...</p>
                 </div>
+              ) : filteredFormateurs.length === 0 ? (
+                <div className="flex flex-col items-center py-20 opacity-30">
+                  <Users className="w-10 h-10 mb-4" />
+                  <p className="font-bold uppercase tracking-widest text-xs">Aucun formateur trouvé</p>
+                </div>
               ) : filteredFormateurs.map((formateur, i) => (
                 <motion.div 
                   key={formateur.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="p-6 rounded-[2rem] bg-overlay border border-border hover:border-primary/30 transition-all duration-300 group"
+                  className="p-6 rounded-2xl bg-overlay border border-border hover:border-primary/30 transition-all duration-300 group"
                 >
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="flex items-center gap-5">
@@ -183,7 +248,7 @@ const Assignments = () => {
 
         {/* Right Column: Groups Overview */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="glass rounded-[2.5rem] p-8 h-full">
+          <div className="glass rounded-2xl p-8 h-full">
             <h3 className="text-xl font-bold text-100 mb-6 flex items-center gap-3">
               <Layers className="w-5 h-5 text-amber-400" />
               État des Groupes
@@ -229,7 +294,7 @@ const Assignments = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-2xl glass rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 border border-border shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="relative w-full max-w-2xl glass rounded-2xl p-6 sm:p-10 border border-border shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -238,7 +303,7 @@ const Assignments = () => {
                 <X size={20} />
               </button>
 
-              <div className="flex items-center gap-6 mb-10">
+              <div className="flex items-center gap-6 mb-8">
                 <div className="h-16 w-16 rounded-3xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-black text-2xl shadow-lg">
                   {activeFormateur?.name.charAt(0)}
                 </div>
@@ -248,7 +313,45 @@ const Assignments = () => {
                 </div>
               </div>
 
+              {/* Add Custom Group Form */}
+              <div className="bg-overlay p-4 rounded-xl border border-border mb-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-500 mb-3">Créer un nouveau groupe</p>
+                <div className="flex flex-col sm:flex-row items-end gap-3">
+                  <div className="flex-1 w-full">
+                    <label className="block text-xs font-bold text-500 mb-1 ml-1">Nom du groupe</label>
+                    <input 
+                      type="text"
+                      placeholder="Ex: DEV101"
+                      className="w-full bg-input border border-border rounded-xl py-2 px-3 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      value={newGroupCode}
+                      onChange={(e) => setNewGroupCode(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex-1 w-full">
+                    <label className="block text-xs font-bold text-500 mb-1 ml-1">Filière</label>
+                    <CustomSelect 
+                      options={[
+                        { value: '', label: 'Sélectionner...' },
+                        ...(filieres?.map(f => ({ value: f.id.toString(), label: f.code })) || [])
+                      ]}
+                      value={newGroupFiliereId}
+                      onChange={setNewGroupFiliereId}
+                    />
+                  </div>
+                  <button 
+                    onClick={handleAddCustomGroup}
+                    className="btn-primary py-2.5 px-4 whitespace-nowrap h-[42px]"
+                  >
+                    <Plus size={16} /> Ajouter
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-6 mb-10">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-sm font-bold text-100">Groupes disponibles</h3>
+                  <span className="text-xs text-500">{selectedGroups.length} sélectionné(s)</span>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                   {groups.map((group) => {
                     const isSelected = selectedGroups.includes(group.id);
@@ -284,7 +387,7 @@ const Assignments = () => {
                 <button 
                   onClick={handleSaveAssignment}
                   disabled={updateMutation.isPending}
-                  className="bg-primary text-white px-10 py-4 rounded-2xl font-bold text-sm shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2"
+                  className="btn-primary"
                 >
                   {updateMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <LinkIcon size={18} />}
                   Confirmer l'affectation
@@ -294,6 +397,81 @@ const Assignments = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Create Formateur Modal */}
+      <Modal 
+        isOpen={isCreateModalOpen} 
+        closeModal={() => setIsCreateModalOpen(false)}
+        title="Nouveau Formateur"
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleCreateFormateur} className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-500 uppercase tracking-widest mb-2 ml-1">Nom complet</label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500" />
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Ex: Ahmed Alaoui"
+                  className="w-full bg-input border border-border rounded-xl py-3 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  value={newFormateur.name}
+                  onChange={(e) => setNewFormateur({...newFormateur, name: e.target.value})}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-xs font-bold text-500 uppercase tracking-widest mb-2 ml-1">Adresse Email</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500" />
+                <input 
+                  type="email" 
+                  required
+                  placeholder="Ex: ahmed@ofppt.ma"
+                  className="w-full bg-input border border-border rounded-xl py-3 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  value={newFormateur.email}
+                  onChange={(e) => setNewFormateur({...newFormateur, email: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-500 uppercase tracking-widest mb-2 ml-1">Mot de passe</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500" />
+                <input 
+                  type="password" 
+                  required
+                  placeholder="••••••••"
+                  className="w-full bg-input border border-border rounded-xl py-3 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  value={newFormateur.password}
+                  onChange={(e) => setNewFormateur({...newFormateur, password: e.target.value})}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button 
+              type="button"
+              onClick={() => setIsCreateModalOpen(false)}
+              className="px-6 py-3 rounded-xl font-bold text-xs text-500 hover:bg-overlay transition-all"
+            >
+              Annuler
+            </button>
+            <button 
+              type="submit"
+              disabled={createMutation.isPending}
+              className="btn-primary"
+            >
+              {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={16} />}
+              Créer le formateur
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
