@@ -6,17 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreNoteRequest;
 use App\Http\Resources\NoteResource;
 use App\Models\Note;
-use App\Models\Stagiaire;
 use App\Models\Notification;
+use App\Models\Stagiaire;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class NoteController extends Controller
 {
-    /**
-     * Liste des notes avec filtres
-     * GET /api/notes?module_id=&semestre=&annee_scolaire=&stagiaire_id=
-     */
     public function index(Request $request)
     {
         $query = Note::with(['stagiaire', 'module']);
@@ -34,69 +30,56 @@ class NoteController extends Controller
             $query->where('stagiaire_id', $stagiaireId);
         }
         if ($groupe = $request->get('groupe')) {
-            $query->whereHas('stagiaire', fn($q) => $q->where('groupe', $groupe));
+            $query->whereHas('stagiaire', fn ($q) => $q->where('groupe', $groupe));
         }
 
-        $notes = $query->orderBy('created_at', 'desc')->paginate(20);
+        $notes = $query->orderBy('created_at', 'desc')->paginate((int) $request->get('per_page', 100));
 
         return NoteResource::collection($notes);
     }
 
-    /**
-     * Enregistrer une note — note_finale et appreciation sont calculées automatiquement
-     * POST /api/notes
-     */
     public function store(StoreNoteRequest $request): JsonResponse
     {
         $data = $request->validated();
-
-        // Vérifier si une note existe déjà pour ce stagiaire/module/semestre/année
-        $exists = Note::where('stagiaire_id', $data['stagiaire_id'])
+        $note = Note::where('stagiaire_id', $data['stagiaire_id'])
             ->where('module_id', $data['module_id'])
             ->where('annee_scolaire', $data['annee_scolaire'])
             ->where('semestre', $data['semestre'])
-            ->exists();
+            ->first();
 
-        if ($exists) {
-            return response()->json([
-                'message' => 'Une note existe déjà pour ce stagiaire dans ce module, semestre et année scolaire.',
-            ], 422);
+        if ($note) {
+            $note->update($data);
+        } else {
+            $note = Note::create($data);
         }
 
-        $note = Note::create($data);
         $note->load(['stagiaire', 'module']);
 
-        // Send notification to stagiaire
-        if ($note->stagiaire && $note->stagiaire->user_id) {
-            \App\Models\Notification::create([
+        if ($note->wasRecentlyCreated && $note->stagiaire && $note->stagiaire->user_id) {
+            Notification::create([
                 'user_id' => $note->stagiaire->user_id,
                 'title' => 'Nouvelle note enregistrée',
                 'message' => "Votre note pour le module {$note->module->intitule} a été publiée.",
                 'type' => 'success',
-                'link' => '/dashboard'
+                'link' => '/dashboard',
             ]);
         }
 
         return response()->json([
             'message' => 'Note enregistrée avec succès.',
             'data' => new NoteResource($note),
-        ], 201);
+        ], $note->wasRecentlyCreated ? 201 : 200);
     }
 
-    /**
-     * Modifier une note
-     * PUT /api/notes/{id}
-     */
     public function update(Request $request, string $id): JsonResponse
     {
         $note = Note::findOrFail($id);
-
         $validated = $request->validate([
-            'note_controle_1' => 'sometimes|numeric|min:0|max:20',
-            'note_controle_2' => 'sometimes|numeric|min:0|max:20',
-            'note_controle_3' => 'sometimes|numeric|min:0|max:20',
-            'note_synthese' => 'sometimes|numeric|min:0|max:20',
-            'note_stage' => 'sometimes|numeric|min:0|max:20',
+            'note_controle_1' => 'nullable|numeric|min:0|max:20',
+            'note_controle_2' => 'nullable|numeric|min:0|max:20',
+            'note_controle_3' => 'nullable|numeric|min:0|max:20',
+            'note_synthese' => 'nullable|numeric|min:0|max:20',
+            'note_stage' => 'nullable|numeric|min:0|max:20',
         ]);
 
         $note->update($validated);
@@ -108,10 +91,6 @@ class NoteController extends Controller
         ]);
     }
 
-    /**
-     * Supprimer une note
-     * DELETE /api/notes/{id}
-     */
     public function destroy(string $id): JsonResponse
     {
         $note = Note::findOrFail($id);
@@ -122,15 +101,9 @@ class NoteController extends Controller
         ]);
     }
 
-    /**
-     * Moyennes par module pour un stagiaire
-     * GET /api/notes/moyennes/{stagiaire_id}
-     */
     public function moyennes(string $stagiaireId): JsonResponse
     {
         $stagiaire = Stagiaire::findOrFail($stagiaireId);
-
-        // Calcul des moyennes par module avec coefficient
         $notes = $stagiaire->notes()->with('module')->get();
 
         $moyennesParModule = $notes->groupBy('module_id')->map(function ($group) {
@@ -149,7 +122,6 @@ class NoteController extends Controller
             ];
         })->values();
 
-        // Moyenne générale pondérée par coefficients
         $totalCoeff = 0;
         $totalPondere = 0;
         foreach ($moyennesParModule as $m) {
@@ -157,12 +129,10 @@ class NoteController extends Controller
             $totalPondere += $m['moyenne'] * $m['module']['coefficient'];
         }
 
-        $moyenneGenerale = $totalCoeff > 0 ? round($totalPondere / $totalCoeff, 2) : 0;
-
         return response()->json([
             'stagiaire_id' => (int) $stagiaireId,
             'nom_complet' => $stagiaire->nom_complet,
-            'moyenne_generale' => $moyenneGenerale,
+            'moyenne_generale' => $totalCoeff > 0 ? round($totalPondere / $totalCoeff, 2) : 0,
             'moyennes_par_module' => $moyennesParModule,
         ]);
     }

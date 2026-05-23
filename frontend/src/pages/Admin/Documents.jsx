@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, UploadCloud, Search, Filter, X, File, Image as ImageIcon, 
@@ -9,6 +9,36 @@ import { useNotification } from '../../context/NotificationContext';
 import CustomSelect from '../../components/ui/CustomSelect';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useFilieres, useFormateurs } from '../../hooks/useQueries';
+
+const initialFilters = {
+  search: '',
+  category: '',
+  filiere_id: '',
+  module_id: '',
+  groupe: '',
+  annee_formation: '',
+  user_id: '',
+};
+
+const initialUploadForm = {
+  title: '',
+  category: 'schedule',
+  shared_with: 'all',
+  filiere_id: '',
+  module_id: '',
+  groupe: '',
+  annee_formation: '',
+  file: null,
+  notify: false
+};
+
+const toSelectValue = (value) => value ?? '';
+
+const filledParams = (values) => Object.fromEntries(
+  Object.entries(values).filter(([, value]) => value !== '' && value !== null && value !== undefined)
+);
+
+const MotionDiv = motion.div;
 
 const Documents = () => {
   const { notify } = useNotification();
@@ -21,15 +51,7 @@ const Documents = () => {
   const [uploading, setUploading] = useState(false);
   
   // Filters
-  const [filters, setFilters] = useState({
-    search: '',
-    category: '',
-    filiere_id: '',
-    module_id: '',
-    groupe: '',
-    annee_formation: '',
-  });
-
+  const [filters, setFilters] = useState(initialFilters);
   const { data: filieres } = useFilieres();
   const { data: formateurs } = useFormateurs();
 
@@ -47,17 +69,7 @@ const Documents = () => {
     }
   });
 
-  const [uploadForm, setUploadForm] = useState({
-    title: '',
-    category: 'schedule',
-    shared_with: 'all',
-    filiere_id: '',
-    module_id: '',
-    groupe: '',
-    annee_formation: '',
-    file: null,
-    notify: false
-  });
+  const [uploadForm, setUploadForm] = useState(initialUploadForm);
 
   const [filterModules, setFilterModules] = useState([]);
   const [uploadModules, setUploadModules] = useState([]);
@@ -86,24 +98,24 @@ const Documents = () => {
     { value: 'administrative', label: 'Documents Administratifs' }
   ];
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/documents', { params: filters });
-      setDocuments(data.data);
-    } catch (error) {
+      const { data } = await api.get('/documents', { params: filledParams(filters) });
+      setDocuments(Array.isArray(data.data) ? data.data : []);
+    } catch {
       notify('error', 'Erreur', 'Impossible de charger les documents.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, notify]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchDocuments();
     }, 300);
     return () => clearTimeout(timer);
-  }, [filters]);
+  }, [fetchDocuments]);
 
   const handleFileSelect = (e) => {
     const files = e.target.files || e.dataTransfer?.files;
@@ -163,8 +175,10 @@ const Documents = () => {
       });
       notify('success', 'Succès', 'Document importé avec succès.');
       setIsUploadModalOpen(false);
-      setUploadForm({ title: '', category: 'schedule', shared_with: 'all', filiere_id: '', module_id: '', groupe: '', annee_formation: '', file: null, notify: false });
-      fetchDocuments();
+      setUploadForm(initialUploadForm);
+      
+      // Clear all filters - this will trigger the useEffect to fetch documents
+      setFilters(initialFilters);
     } catch (error) {
       notify('error', 'Erreur', error.response?.data?.message || 'Erreur lors de l\'importation.');
     } finally {
@@ -185,7 +199,7 @@ const Documents = () => {
       notify('success', 'Succès', 'Notifications envoyées avec succès.');
       setIsDistributeModalOpen(false);
       setDistributionForm({ recipients: [], target_ids: { groups: [], filieres: [] } });
-    } catch (error) {
+    } catch {
       notify('error', 'Erreur', 'Impossible d\'envoyer les notifications.');
     } finally {
       setDistributeLoading(false);
@@ -207,7 +221,7 @@ const Documents = () => {
       await api.delete(`/documents/${docToDelete.id}`);
       notify('success', 'Supprimé', 'Le document a été supprimé.');
       fetchDocuments();
-    } catch (error) {
+    } catch {
       notify('error', 'Erreur', 'Impossible de supprimer le document.');
     } finally {
       setIsDeleteModalOpen(false);
@@ -268,7 +282,7 @@ const Documents = () => {
         <>
           {/* Recent Uploads */}
           {recentDocs.length > 0 && !filters.search && !filters.category && !filters.filiere_id && (
-            <motion.div 
+            <MotionDiv 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-8"
@@ -281,7 +295,7 @@ const Documents = () => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {recentDocs.map((doc, index) => (
-                  <motion.div
+                  <MotionDiv
                     key={`recent-${doc.id}`}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -296,112 +310,189 @@ const Documents = () => {
                       <p className="font-bold text-sm text-100 truncate">{doc.title}</p>
                       <p className="text-[10px] text-500 font-medium uppercase tracking-widest">{new Date(doc.created_at).toLocaleDateString('fr-FR')}</p>
                     </div>
-                  </motion.div>
+                  </MotionDiv>
                 ))}
               </div>
-            </motion.div>
+            </MotionDiv>
           )}
 
-          {/* Filters & Actions */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-2">
-            <div className="flex-1 w-full glass rounded-2xl p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <div className="relative group">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 mb-2 block">Recherche</label>
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
-                    <input 
-                      type="text" 
-                      placeholder="Nom du document..." 
-                      className="w-full bg-input border border-border rounded-xl py-2.5 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                      value={filters.search}
-                      onChange={(e) => setFilters({...filters, search: e.target.value})}
-                    />
-                    <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">Formateur</label>
-                  <CustomSelect
-                    options={[
-                      { value: '', label: 'Tous les formateurs' },
-                      ...(formateurs?.map(f => ({ value: f.id, label: f.name })) || [])
-                    ]}
-                    value={filters.user_id}
-                    onChange={(val) => setFilters({...filters, user_id: val})}
-                  />
-                </div>
-              </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">Catégorie</label>
-                  <CustomSelect
-                    options={[
-                      { value: '', label: 'Toutes les catégories' },
-                      ...categories
-                    ]}
-                    value={filters.category}
-                    onChange={(val) => setFilters({...filters, category: val})}
-                  />
-                </div>
+       {/* Filters & Actions */}
+<div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-2">
+  <div className="flex-1 w-full glass rounded-2xl p-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">Filière</label>
-                  <CustomSelect
-                    options={[
-                      { value: '', label: 'Toutes les filières' },
-                      ...(filieres?.map(f => ({ value: f.id, label: f.code })) || [])
-                    ]}
-                    value={filters.filiere_id}
-                    onChange={(val) => setFilters({...filters, filiere_id: val})}
-                  />
-                </div>
+      {/* Recherche */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">
+          Recherche
+        </label>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">Module</label>
-                  <CustomSelect
-                    options={[
-                      { value: '', label: 'Tous les modules' },
-                      ...(filterModules?.map(m => ({ value: m.id, label: m.code + ' - ' + m.intitule })) || [])
-                    ]}
-                    value={filters.module_id}
-                    onChange={(val) => setFilters({...filters, module_id: val})}
-                    disabled={!filters.filiere_id}
-                  />
-                </div>
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">Année</label>
-                  <CustomSelect
-                    options={[
-                      { value: '', label: 'Toutes les années' },
-                      { value: '1', label: '1ère année' },
-                      { value: '2', label: '2ème année' },
-                      { value: '3', label: '3ème année' }
-                    ]}
-                    value={filters.annee_formation}
-                    onChange={(val) => setFilters({...filters, annee_formation: val})}
-                  />
-                </div>
+          <input
+            type="text"
+            placeholder="Nom du document..."
+            className="w-full bg-input border border-border rounded-xl py-2.5 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            value={filters.search}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                search: e.target.value,
+              })
+            }
+          />
+        </div>
+      </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">Groupe</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: DEV201" 
-                    className="w-full bg-input border border-border rounded-xl py-2.5 px-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all uppercase"
-                    value={filters.groupe}
-                    onChange={(e) => setFilters({...filters, groupe: e.target.value.toUpperCase()})}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <button 
-              onClick={() => setIsUploadModalOpen(true)}
-              className="btn-primary w-full md:w-auto justify-center h-[92px] shrink-0"
-            >
-              <UploadCloud size={20} strokeWidth={3} /> Importer
-            </button>
-          </div>
+      {/* Formateur */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">
+          Formateur
+        </label>
+
+        <CustomSelect
+          options={[
+            { value: '', label: 'Tous les formateurs' },
+            ...(formateurs?.map((f) => ({
+              value: f.id,
+              label: f.name,
+            })) || []),
+          ]}
+          value={filters.user_id}
+          onChange={(val) =>
+            setFilters({
+              ...filters,
+              user_id: toSelectValue(val),
+            })
+          }
+        />
+      </div>
+
+      {/* Catégorie */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">
+          Catégorie
+        </label>
+
+        <CustomSelect
+          options={[
+            { value: '', label: 'Toutes les catégories' },
+            ...categories,
+          ]}
+          value={filters.category}
+          onChange={(val) =>
+            setFilters({
+              ...filters,
+              category: toSelectValue(val),
+            })
+          }
+        />
+      </div>
+
+      {/* Filière */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">
+          Filière
+        </label>
+
+        <CustomSelect
+          options={[
+            { value: '', label: 'Toutes les filières' },
+            ...(filieres?.map((f) => ({
+              value: f.id,
+              label: f.code,
+            })) || []),
+          ]}
+          value={filters.filiere_id}
+          onChange={(val) =>
+            setFilters({
+              ...filters,
+              filiere_id: toSelectValue(val),
+              module_id: '',
+            })
+          }
+        />
+      </div>
+
+      {/* Module */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">
+          Module
+        </label>
+
+        <CustomSelect
+          options={[
+            { value: '', label: 'Tous les modules' },
+            ...(filterModules?.map((m) => ({
+              value: m.id,
+              label: `${m.code} - ${m.intitule}`,
+            })) || []),
+          ]}
+          value={filters.module_id}
+          onChange={(val) =>
+            setFilters({
+              ...filters,
+              module_id: toSelectValue(val),
+            })
+          }
+          disabled={!filters.filiere_id}
+        />
+      </div>
+
+      {/* Année */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">
+          Année
+        </label>
+
+        <CustomSelect
+          options={[
+            { value: '', label: 'Toutes les années' },
+            { value: '1', label: '1ère année' },
+            { value: '2', label: '2ème année' },
+            { value: '3', label: '3ème année' },
+          ]}
+          value={filters.annee_formation}
+          onChange={(val) =>
+            setFilters({
+              ...filters,
+              annee_formation: toSelectValue(val),
+            })
+          }
+        />
+      </div>
+
+      {/* Groupe */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1 block">
+          Groupe
+        </label>
+
+        <input
+          type="text"
+          placeholder="Ex: DEV201"
+          className="w-full bg-input border border-border rounded-xl py-2.5 px-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all uppercase"
+          value={filters.groupe}
+          onChange={(e) =>
+            setFilters({
+              ...filters,
+              groupe: e.target.value.toUpperCase(),
+            })
+          }
+        />
+      </div>
+    </div>
+  </div>
+
+  <button
+    onClick={() => setIsUploadModalOpen(true)}
+    className="btn-primary w-full md:w-auto justify-center h-[92px] shrink-0"
+  >
+    <UploadCloud size={20} strokeWidth={3} />
+    Importer
+  </button>
+</div>
 
           {/* Documents Grid */}
           {loading ? (
@@ -421,7 +512,7 @@ const Documents = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
               <AnimatePresence>
                 {documents.map((doc, index) => (
-                  <motion.div
+                  <MotionDiv
                     key={doc.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -509,7 +600,7 @@ const Documents = () => {
                         </span>
                       )}
                     </div>
-                  </motion.div>
+                  </MotionDiv>
                 ))}
               </AnimatePresence>
             </div>
@@ -529,7 +620,7 @@ const Documents = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {formateurs?.map((formateur, i) => (
-              <motion.div 
+              <MotionDiv 
                 key={formateur.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -600,7 +691,7 @@ const Documents = () => {
                     </button>
                   </div>
                 </div>
-              </motion.div>
+              </MotionDiv>
             ))}
           </div>
         </div>
@@ -609,13 +700,13 @@ const Documents = () => {
       {/* Upload Modal */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <motion.div 
+          <MotionDiv 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="absolute inset-0 bg-background/80 backdrop-blur-sm"
             onClick={() => !uploading && setIsUploadModalOpen(false)}
           />
-          <motion.div 
+          <MotionDiv 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="relative w-full max-w-xl glass rounded-2xl p-8 sm:p-10 shadow-2xl max-h-[90vh] overflow-y-auto"
@@ -652,7 +743,7 @@ const Documents = () => {
                   <CustomSelect
                     options={categories}
                     value={uploadForm.category}
-                    onChange={(val) => setUploadForm({...uploadForm, category: val})}
+                    onChange={(val) => setUploadForm({...uploadForm, category: toSelectValue(val)})}
                   />
                 </div>
               </div>
@@ -667,7 +758,7 @@ const Documents = () => {
                       { value: 'stagiaires', label: 'Stagiaires uniquement' }
                     ]}
                     value={uploadForm.shared_with}
-                    onChange={(val) => setUploadForm({...uploadForm, shared_with: val})}
+                    onChange={(val) => setUploadForm({...uploadForm, shared_with: toSelectValue(val)})}
                   />
                 </div>
                 <div className="flex items-center gap-3 pt-6">
@@ -693,7 +784,7 @@ const Documents = () => {
                       ...(filieres?.map(f => ({ value: f.id, label: f.code })) || [])
                     ]}
                     value={uploadForm.filiere_id}
-                    onChange={(val) => setUploadForm({...uploadForm, filiere_id: val})}
+                    onChange={(val) => setUploadForm({...uploadForm, filiere_id: toSelectValue(val), module_id: ''})}
                   />
                 </div>
                 <div className="space-y-2">
@@ -704,7 +795,7 @@ const Documents = () => {
                       ...(uploadModules?.map(m => ({ value: m.id, label: m.code + ' - ' + m.intitule })) || [])
                     ]}
                     value={uploadForm.module_id}
-                    onChange={(val) => setUploadForm({...uploadForm, module_id: val})}
+                    onChange={(val) => setUploadForm({...uploadForm, module_id: toSelectValue(val)})}
                     disabled={!uploadForm.filiere_id}
                   />
                 </div>
@@ -731,7 +822,7 @@ const Documents = () => {
                       { value: '3', label: '3ème année' }
                     ]}
                     value={uploadForm.annee_formation}
-                    onChange={(val) => setUploadForm({...uploadForm, annee_formation: val})}
+                    onChange={(val) => setUploadForm({...uploadForm, annee_formation: toSelectValue(val)})}
                   />
                 </div>
               </div>
@@ -810,7 +901,7 @@ const Documents = () => {
                 </button>
               </div>
             </form>
-          </motion.div>
+          </MotionDiv>
         </div>
       )}
 
@@ -826,13 +917,13 @@ const Documents = () => {
       {/* Distribution Modal */}
       {isDistributeModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <motion.div 
+          <MotionDiv 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="absolute inset-0 bg-background/80 backdrop-blur-sm"
             onClick={() => !distributeLoading && setIsDistributeModalOpen(false)}
           />
-          <motion.div 
+          <MotionDiv 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="relative w-full max-w-md glass rounded-2xl p-8 shadow-2xl"
@@ -935,7 +1026,7 @@ const Documents = () => {
                 </button>
               </div>
             </form>
-          </motion.div>
+          </MotionDiv>
         </div>
       )}
     </div>

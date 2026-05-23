@@ -3,14 +3,15 @@ import { Listbox, Transition } from '@headlessui/react';
 import { ChevronDown, Check } from 'lucide-react';
 
 const CustomSelect = ({ options, value, onChange, placeholder = 'Sélectionner', disabled = false }) => {
+  const normalizedValue = value ?? '';
   // Ensure we compare values correctly regardless of type (string/number)
   const selectedOption = options.find((opt) => 
-    (value !== null && value !== undefined && String(opt.value) === String(value))
+    String(opt.value) === String(normalizedValue)
   );
 
   return (
     <div className="relative w-full">
-      <Listbox value={value} onChange={onChange} disabled={disabled}>
+      <Listbox value={normalizedValue} onChange={(selectedValue) => onChange(selectedValue ?? '')} disabled={disabled}>
         <div className="relative">
           <Listbox.Button 
             className={`
@@ -76,4 +77,3 @@ const CustomSelect = ({ options, value, onChange, placeholder = 'Sélectionner',
 };
 
 export default CustomSelect;
-

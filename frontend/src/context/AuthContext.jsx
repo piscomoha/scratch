@@ -38,10 +38,52 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api.post('/auth/login', { email, password });
       setToken(data.token);
       setUser(data.user);
-      return { success: true, role: data.user.role };
+      return { success: true, role: data.user.role, user: data.user };
     } catch (error) {
       const message = error.response?.data?.message || 'Erreur de connexion';
       return { success: false, message };
+    }
+  };
+
+  const signup = async (name, email, password, passwordConfirm, role) => {
+    try {
+      const { data } = await api.post('/auth/register', {
+        name,
+        email,
+        password,
+        password_confirmation: passwordConfirm,
+        role,
+      });
+      setToken(data.token);
+      setUser(data.user);
+      return { success: true, role: data.user.role, user: data.user };
+    } catch (error) {
+      const errors = error.response?.data?.errors;
+      const message = error.response?.data?.message || 'Erreur lors de l\'inscription';
+      return { success: false, message, errors };
+    }
+  };
+
+  const updateProfile = async (payload) => {
+    try {
+      const { data } = await api.put('/auth/profile', payload);
+      setUser(data.user);
+      return { success: true, user: data.user, message: data.message };
+    } catch (error) {
+      const errors = error.response?.data?.errors;
+      const message = error.response?.data?.message || 'Erreur lors de la mise à jour du profil';
+      return { success: false, message, errors };
+    }
+  };
+
+  const updatePassword = async (payload) => {
+    try {
+      const { data } = await api.put('/auth/password', payload);
+      return { success: true, message: data.message };
+    } catch (error) {
+      const errors = error.response?.data?.errors;
+      const message = error.response?.data?.message || 'Erreur lors de la mise à jour du mot de passe';
+      return { success: false, message, errors };
     }
   };
 
@@ -58,7 +100,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, loading, login, signup, updateProfile, updatePassword, logout, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

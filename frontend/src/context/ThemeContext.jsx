@@ -3,14 +3,20 @@ import { createContext, useContext, useEffect, useState } from 'react';
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
+  const getSystemTheme = () => (
+    window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  );
+
   const [theme, setTheme] = useState(() => {
-    // Check localStorage or system preference
+    const syncTheme = localStorage.getItem('syncTheme') === 'true';
+    if (syncTheme) return getSystemTheme();
+
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) return savedTheme;
-    
-    // Default to dark as requested
-    return 'dark';
+
+    return 'light';
   });
+  const [syncTheme, setSyncTheme] = useState(() => localStorage.getItem('syncTheme') === 'true');
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -21,16 +27,35 @@ export const ThemeProvider = ({ children }) => {
     // Add current theme class
     root.classList.add(theme);
     
-    // Persist
-    localStorage.setItem('theme', theme);
+    if (!syncTheme) {
+      localStorage.setItem('theme', theme);
+    }
   }, [theme]);
 
+  useEffect(() => {
+    localStorage.setItem('syncTheme', syncTheme ? 'true' : 'false');
+    if (!syncTheme) return;
+
+    const media = window.matchMedia?.('(prefers-color-scheme: dark)');
+    const applySystemTheme = () => setTheme(getSystemTheme());
+    applySystemTheme();
+
+    media?.addEventListener('change', applySystemTheme);
+    return () => media?.removeEventListener('change', applySystemTheme);
+  }, [syncTheme]);
+
+  const setThemeMode = (nextTheme) => {
+    setSyncTheme(false);
+    setTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+  };
+
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setThemeMode(theme === 'dark' ? 'light' : 'dark');
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, syncTheme, setSyncTheme, setThemeMode, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

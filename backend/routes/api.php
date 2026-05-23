@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Route;
 // ═══ Routes publiques (authentification) ═══
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
 });
 
 // ═══ Routes protégées par Sanctum ═══
@@ -30,6 +31,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
+    Route::put('/auth/password', [AuthController::class, 'updatePassword']);
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index']);

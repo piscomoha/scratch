@@ -177,8 +177,8 @@ const StagiairesList = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4 sm:px-6">
-                      <p className="text-sm font-bold text-100 truncate">{stagiaire.filiere?.code}</p>
-                      <span className="badge-secondary text-[10px] mt-1 inline-block">{stagiaire.groupe}</span>
+                      <p className="text-sm font-bold text-100 truncate">{stagiaire.filiere?.code || 'À compléter'}</p>
+                      <span className="badge-secondary text-[10px] mt-1 inline-block">{stagiaire.groupe || 'Groupe à compléter'}</span>
                     </td>
                     <td className="py-3 px-4 sm:px-6 hidden md:table-cell">
                       <div className="flex items-center gap-1.5 text-sm font-medium text-400">

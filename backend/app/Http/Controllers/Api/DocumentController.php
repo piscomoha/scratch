@@ -18,6 +18,8 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         $query = Document::with(['filiere', 'formateur', 'module']);
+        $hasFilter = fn ($key) => $request->filled($key)
+            && !in_array(strtolower((string) $request->input($key)), ['undefined', 'null'], true);
 
         // Access Control
         if ($user->isStagiaire()) {
@@ -54,28 +56,28 @@ class DocumentController extends Controller
             });
         }
 
-        if ($request->has('search') && $request->search !== '') {
-            $query->where('title', 'like', '%' . $request->search . '%');
+        if ($hasFilter('search')) {
+            $query->where('title', 'like', '%' . trim($request->search) . '%');
         }
-        if ($request->has('category') && $request->category !== '') {
+        if ($hasFilter('category')) {
             $query->where('category', $request->category);
         }
-        if ($request->has('shared_with') && $request->shared_with !== '') {
+        if ($hasFilter('shared_with')) {
             $query->where('shared_with', $request->shared_with);
         }
-        if ($request->has('filiere_id') && $request->filiere_id !== '') {
+        if ($hasFilter('filiere_id')) {
             $query->where('filiere_id', $request->filiere_id);
         }
-        if ($request->has('module_id') && $request->module_id !== '') {
+        if ($hasFilter('module_id')) {
             $query->where('module_id', $request->module_id);
         }
-        if ($request->has('groupe') && $request->groupe !== '') {
-            $query->where('groupe', $request->groupe);
+        if ($hasFilter('groupe')) {
+            $query->where('groupe', strtoupper(trim($request->groupe)));
         }
-        if ($request->has('annee_formation') && $request->annee_formation !== '') {
+        if ($hasFilter('annee_formation')) {
             $query->where('annee_formation', $request->annee_formation);
         }
-        if ($request->has('user_id') && $request->user_id !== '') {
+        if ($hasFilter('user_id')) {
             $query->where('user_id', $request->user_id);
         }
 
@@ -100,6 +102,10 @@ class DocumentController extends Controller
             'file' => 'required|file|max:20480', // Max 20MB
             'category' => 'required|string',
             'shared_with' => 'nullable|string|in:all,formateurs,stagiaires',
+            'filiere_id' => 'nullable|integer|exists:filieres,id',
+            'module_id' => 'nullable|integer|exists:modules,id',
+            'groupe' => 'nullable|string|max:50',
+            'annee_formation' => 'nullable|string|max:20',
         ]);
 
         $file = $request->file('file');
@@ -112,10 +118,10 @@ class DocumentController extends Controller
             'file_size' => $file->getSize(),
             'category' => $request->category,
             'shared_with' => $request->shared_with ?: 'all',
-            'filiere_id' => $request->filiere_id ?: null,
-            'module_id' => $request->module_id ?: null,
-            'groupe' => $request->groupe ?: null,
-            'annee_formation' => $request->annee_formation ?: null,
+            'filiere_id' => $request->filled('filiere_id') ? $request->integer('filiere_id') : null,
+            'module_id' => $request->filled('module_id') ? $request->integer('module_id') : null,
+            'groupe' => $request->filled('groupe') ? strtoupper(trim($request->groupe)) : null,
+            'annee_formation' => $request->filled('annee_formation') ? $request->annee_formation : null,
             'user_id' => Auth::id(),
         ]);
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -25,7 +25,8 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useNotification } from '../../context/NotificationContext';
-import ThemeToggle from '../../components/ui/ThemeToggle';
+import CustomSelect from '../../components/ui/CustomSelect';
+import { useFilieres } from '../../hooks/useQueries';
 
 const Toggle = ({ enabled, onChange }) => (
   <button 
@@ -36,12 +37,37 @@ const Toggle = ({ enabled, onChange }) => (
   </button>
 );
 
+const MotionDiv = motion.div;
+
 const Settings = () => {
-  const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { user, logout, updateProfile, updatePassword } = useAuth();
+  const { theme, syncTheme, setSyncTheme, setThemeMode } = useTheme();
   const { notify } = useNotification();
+  const { data: filieres } = useFilieres();
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    filiere_id: '',
+    groupe: '',
+    annee_formation: '1',
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    password: '',
+    password_confirmation: '',
+  });
+  const [systemPrefs, setSystemPrefs] = useState(() => {
+    const saved = localStorage.getItem('systemPrefs');
+    return saved ? JSON.parse(saved) : {
+      language: 'fr',
+      density: 'comfortable',
+      ultraLight: false,
+    };
+  });
 
   const [notifs, setNotifs] = useState({
     system: true,
@@ -58,8 +84,59 @@ const Settings = () => {
     { id: 'danger', name: 'Zone de danger', icon: Trash2, color: 'text-red-400' },
   ];
 
-  const handleSave = () => {
-    notify('success', 'Paramètres enregistrés', 'Vos modifications ont été appliquées avec succès.');
+  useEffect(() => {
+    // Keep editable settings fields in sync after login/profile refresh.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setProfileForm({
+      name: user?.name || '',
+      email: user?.email || '',
+      filiere_id: user?.stagiaire?.filiere_id || '',
+      groupe: user?.stagiaire?.groupe || '',
+      annee_formation: String(user?.stagiaire?.annee_formation || '1'),
+    });
+  }, [user]);
+
+  const formatErrors = (result) => (
+    result.errors ? Object.values(result.errors).flat().join(', ') : result.message
+  );
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    const result = await updateProfile(profileForm);
+    setSavingProfile(false);
+
+    if (result.success) {
+      notify('success', 'Profil enregistré', 'Vos informations ont été mises à jour.');
+    } else {
+      notify('error', 'Erreur', formatErrors(result));
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+
+    if (passwordForm.password !== passwordForm.password_confirmation) {
+      notify('error', 'Erreur', 'Les nouveaux mots de passe ne correspondent pas.');
+      return;
+    }
+
+    setSavingPassword(true);
+    const result = await updatePassword(passwordForm);
+    setSavingPassword(false);
+
+    if (result.success) {
+      notify('success', 'Mot de passe mis à jour', result.message);
+      setPasswordForm({ current_password: '', password: '', password_confirmation: '' });
+    } else {
+      notify('error', 'Erreur', formatErrors(result));
+    }
+  };
+
+  const updateSystemPref = (key, value) => {
+    const nextPrefs = { ...systemPrefs, [key]: value };
+    setSystemPrefs(nextPrefs);
+    localStorage.setItem('systemPrefs', JSON.stringify(nextPrefs));
+    notify('success', 'Préférence enregistrée', 'Le paramètre système a été mis à jour.');
   };
 
   const containerVariants = {
@@ -99,7 +176,7 @@ const Settings = () => {
                 <item.icon size={20} className={activeTab === item.id ? 'text-primary' : item.color} />
                 <span className="font-bold text-sm">{item.name}</span>
               </div>
-              {activeTab === item.id && <motion.div layoutId="active-indicator"><ChevronRight size={16} /></motion.div>}
+              {activeTab === item.id && <MotionDiv layoutId="active-indicator"><ChevronRight size={16} /></MotionDiv>}
             </button>
           ))}
         </div>
@@ -107,7 +184,7 @@ const Settings = () => {
         {/* Content Area */}
         <div className="lg:col-span-9">
           <AnimatePresence mode="wait">
-            <motion.div
+            <MotionDiv
               key={activeTab}
               variants={containerVariants}
               initial="hidden"
@@ -145,7 +222,8 @@ const Settings = () => {
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
                         <input 
                           type="text" 
-                          defaultValue={user?.name}
+                          value={profileForm.name}
+                          onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
                           className="w-full bg-input border border-border rounded-xl py-3 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         />
                       </div>
@@ -156,19 +234,58 @@ const Settings = () => {
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
                         <input 
                           type="email" 
-                          defaultValue={user?.email}
+                          value={profileForm.email}
+                          onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
                           className="w-full bg-input border border-border rounded-xl py-3 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         />
                       </div>
                     </div>
                   </div>
 
+                  {user?.role === 'stagiaire' && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-500 uppercase tracking-widest ml-1">Filière</label>
+                        <CustomSelect
+                          options={[
+                            { value: '', label: 'Sélectionner une filière' },
+                            ...(filieres?.map((f) => ({ value: f.id, label: `${f.code} - ${f.libelle}` })) || [])
+                          ]}
+                          value={profileForm.filiere_id}
+                          onChange={(value) => setProfileForm({ ...profileForm, filiere_id: value ?? '' })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-500 uppercase tracking-widest ml-1">Groupe</label>
+                        <input
+                          type="text"
+                          value={profileForm.groupe}
+                          onChange={(e) => setProfileForm({ ...profileForm, groupe: e.target.value.toUpperCase() })}
+                          placeholder="Ex: DEV201"
+                          className="w-full bg-input border border-border rounded-xl py-3 px-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all uppercase"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-500 uppercase tracking-widest ml-1">Année</label>
+                        <CustomSelect
+                          options={[
+                            { value: '1', label: '1ère année' },
+                            { value: '2', label: '2ème année' },
+                          ]}
+                          value={profileForm.annee_formation}
+                          onChange={(value) => setProfileForm({ ...profileForm, annee_formation: value ?? '1' })}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex justify-end pt-4">
                     <button 
-                      onClick={handleSave}
+                      onClick={handleSaveProfile}
+                      disabled={savingProfile}
                       className="btn-primary"
                     >
-                      <Save size={20} /> Enregistrer les modifications
+                      <Save size={20} /> {savingProfile ? 'Enregistrement...' : 'Enregistrer les modifications'}
                     </button>
                   </div>
                 </div>
@@ -177,23 +294,23 @@ const Settings = () => {
               {activeTab === 'appearance' && (
                 <div className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className={`p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${theme === 'dark' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`} onClick={() => theme !== 'dark' && toggleTheme()}>
+                    <div className={`p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${theme === 'dark' && !syncTheme ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`} onClick={() => setThemeMode('dark')}>
                       <div className="flex justify-between items-start mb-6">
                         <div className="p-4 rounded-2xl bg-zinc-900 text-amber-400">
                           <Moon size={24} />
                         </div>
-                        {theme === 'dark' && <div className="p-1 bg-primary text-white rounded-full"><ChevronRight size={16} /></div>}
+                        {theme === 'dark' && !syncTheme && <div className="p-1 bg-primary text-white rounded-full"><ChevronRight size={16} /></div>}
                       </div>
                       <h4 className="text-lg font-black text-100 mb-2">Mode Sombre</h4>
                       <p className="text-sm text-500 font-medium">Réduit la fatigue oculaire et économise de l'énergie.</p>
                     </div>
 
-                    <div className={`p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${theme === 'light' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`} onClick={() => theme !== 'light' && toggleTheme()}>
+                    <div className={`p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${theme === 'light' && !syncTheme ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`} onClick={() => setThemeMode('light')}>
                       <div className="flex justify-between items-start mb-6">
                         <div className="p-4 rounded-2xl bg-zinc-100 text-amber-600">
                           <Sun size={24} />
                         </div>
-                        {theme === 'light' && <div className="p-1 bg-primary text-white rounded-full"><ChevronRight size={16} /></div>}
+                        {theme === 'light' && !syncTheme && <div className="p-1 bg-primary text-white rounded-full"><ChevronRight size={16} /></div>}
                       </div>
                       <h4 className="text-lg font-black text-100 mb-2">Mode Clair</h4>
                       <p className="text-sm text-500 font-medium">Idéal pour les environnements lumineux.</p>
@@ -210,7 +327,7 @@ const Settings = () => {
                         <p className="text-xs text-500 font-medium mt-0.5">Adapter automatiquement au thème de votre ordinateur.</p>
                       </div>
                     </div>
-                    <Toggle enabled={false} />
+                    <Toggle enabled={syncTheme} onChange={() => setSyncTheme(!syncTheme)} />
                   </div>
                 </div>
               )}
@@ -253,17 +370,20 @@ const Settings = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-6">
+                  <form onSubmit={handlePasswordSubmit} className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-500 uppercase tracking-widest ml-1">Mot de passe actuel</label>
                       <div className="relative group">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
                         <input 
                           type={showPassword ? "text" : "password"} 
+                          value={passwordForm.current_password}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
                           className="w-full bg-input border border-border rounded-xl py-3 pl-12 pr-12 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                           placeholder="••••••••"
                         />
                         <button 
+                          type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-4 top-1/2 -translate-y-1/2 text-500 hover:text-100 transition-colors"
                         >
@@ -277,6 +397,8 @@ const Settings = () => {
                         <label className="text-xs font-bold text-500 uppercase tracking-widest ml-1">Nouveau mot de passe</label>
                         <input 
                           type="password" 
+                          value={passwordForm.password}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, password: e.target.value })}
                           className="w-full bg-input border border-border rounded-xl py-3 px-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                           placeholder="••••••••"
                         />
@@ -285,21 +407,24 @@ const Settings = () => {
                         <label className="text-xs font-bold text-500 uppercase tracking-widest ml-1">Confirmer le nouveau</label>
                         <input 
                           type="password" 
+                          value={passwordForm.password_confirmation}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, password_confirmation: e.target.value })}
                           className="w-full bg-input border border-border rounded-xl py-3 px-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                           placeholder="••••••••"
                         />
                       </div>
                     </div>
-                  </div>
+                    <div className="flex justify-end pt-4">
+                      <button
+                        type="submit"
+                        disabled={savingPassword}
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-1 flex items-center gap-2 disabled:opacity-60"
+                      >
+                        <Lock size={18} /> {savingPassword ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
+                      </button>
+                    </div>
+                  </form>
 
-                  <div className="flex justify-end pt-4">
-                    <button 
-                      onClick={handleSave}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-1 flex items-center gap-2"
-                    >
-                      <Lock size={18} /> Mettre à jour le mot de passe
-                    </button>
-                  </div>
                 </div>
               )}
 
@@ -316,8 +441,8 @@ const Settings = () => {
                           { value: 'en', label: 'English (US)' },
                           { value: 'ar', label: 'العربية (Maroc)' }
                         ]}
-                        value="fr"
-                        onChange={() => {}}
+                        value={systemPrefs.language}
+                        onChange={(value) => updateSystemPref('language', value)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -330,8 +455,8 @@ const Settings = () => {
                           { value: 'compact', label: 'Compact' },
                           { value: 'spacious', label: 'Spacieux' }
                         ]}
-                        value="comfortable"
-                        onChange={() => {}}
+                        value={systemPrefs.density}
+                        onChange={(value) => updateSystemPref('density', value)}
                       />
                     </div>
                   </div>
@@ -344,7 +469,10 @@ const Settings = () => {
                           <p className="text-sm font-bold text-200">Mode Ultra-Léger</p>
                           <p className="text-xs text-500">Désactive les animations pour plus de performance.</p>
                         </div>
-                        <Toggle enabled={false} />
+                        <Toggle
+                          enabled={systemPrefs.ultraLight}
+                          onChange={() => updateSystemPref('ultraLight', !systemPrefs.ultraLight)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -395,7 +523,7 @@ const Settings = () => {
                   </div>
                 </div>
               )}
-            </motion.div>
+            </MotionDiv>
           </AnimatePresence>
         </div>
       </div>

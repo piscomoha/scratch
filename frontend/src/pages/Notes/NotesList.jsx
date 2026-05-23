@@ -8,19 +8,22 @@ import CustomSelect from '../../components/ui/CustomSelect';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotification } from '../../context/NotificationContext';
 
+const MotionDiv = motion.div;
+const MotionTr = motion.tr;
+
 const StageInfoModal = ({ stage, isOpen, onClose }) => {
   if (!isOpen || !stage) return null;
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-      <motion.div 
+      <MotionDiv 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
         className="absolute inset-0 bg-background/80 backdrop-blur-md"
       />
-      <motion.div 
+      <MotionDiv 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -104,7 +107,7 @@ const StageInfoModal = ({ stage, isOpen, onClose }) => {
             {stage.statut}
           </div>
         </div>
-      </motion.div>
+      </MotionDiv>
     </div>
   );
 };
@@ -116,15 +119,17 @@ const NotesList = () => {
   const [groupe, setGroupe] = useState('');
   const [moduleId, setModuleId] = useState('');
   const [semestre, setSemestre] = useState('1');
-  const [annee, setAnnee] = useState('2024-2025');
+  const [annee] = useState('2024-2025');
   const [selectedStage, setSelectedStage] = useState(null);
   
   const [modules, setModules] = useState([]);
   const [stagiaires, setStagiaires] = useState([]);
   const [notesForm, setNotesForm] = useState({});
   const [loading, setLoading] = useState(false);
+  const [savingCells, setSavingCells] = useState({});
 
   const { data: filieres } = useFilieres();
+  const canEditNotes = user?.role === 'formateur';
 
   useEffect(() => {
     if (filiereId) {
@@ -145,7 +150,7 @@ const NotesList = () => {
       const stagsRes = await api.get(`/stagiaires?filiere_id=${filiereId}&groupe=${groupe}&per_page=100`);
       const stags = stagsRes.data.data;
       
-      const notesRes = await api.get(`/notes?module_id=${moduleId}&semestre=${semestre}&annee_scolaire=${annee}`);
+      const notesRes = await api.get(`/notes?module_id=${moduleId}&semestre=${semestre}&annee_scolaire=${annee}&per_page=500`);
       const notesExistantes = notesRes.data.data;
 
       const formData = {};
@@ -167,7 +172,7 @@ const NotesList = () => {
 
       setStagiaires(stags);
       setNotesForm(formData);
-    } catch (error) {
+    } catch {
       notify('error', 'Erreur de chargement', 'Impossible de récupérer les notes des stagiaires.');
     } finally {
       setLoading(false);
@@ -188,19 +193,9 @@ const NotesList = () => {
       ].filter(v => v !== '');
       
       const ef = field === 'note_synthese' ? value : current.note_synthese;
-      const stage = field === 'note_stage' ? value : current.note_stage;
-      
-      if (ccs.length > 0 && ef !== '') {
+      if (ccs.length === 3 && ef !== '') {
         const moyCC = ccs.reduce((a, b) => Number(a) + Number(b), 0) / ccs.length;
-        
-        if (current.annee_formation === 2 && stage !== '') {
-          const efm = (Number(ef) + Number(stage)) / 2;
-          nextData.note_finale = Math.round((moyCC * 0.4 + efm * 0.6) * 100) / 100;
-        } else if (current.annee_formation !== 2) {
-          nextData.note_finale = Math.round((moyCC * 0.4 + Number(ef) * 0.6) * 100) / 100;
-        } else {
-          nextData.note_finale = null;
-        }
+        nextData.note_finale = Math.round((moyCC * 0.4 + Number(ef) * 0.6) * 100) / 100;
       } else {
         nextData.note_finale = null;
       }
@@ -211,7 +206,7 @@ const NotesList = () => {
 
   const sauvegarderNotes = async () => {
     const notesToSave = Object.entries(notesForm)
-      .filter(([_, data]) => data.isDirty)
+      .filter(([, data]) => data.isDirty)
       .map(([stagiaireId, data]) => ({
         stagiaireId,
         ...data
@@ -226,17 +221,15 @@ const NotesList = () => {
     let successCount = 0;
     
     for (const note of notesToSave) {
-      if (note.note_controle_1 === '' || note.note_synthese === '') continue;
-
       try {
         const payload = {
           stagiaire_id: note.stagiaireId,
           module_id: moduleId,
-          note_controle_1: note.note_controle_1,
-          note_controle_2: note.note_controle_2,
-          note_controle_3: note.note_controle_3,
-          note_synthese: note.note_synthese,
-          note_stage: note.note_stage || null,
+          note_controle_1: note.note_controle_1 === '' ? null : note.note_controle_1,
+          note_controle_2: note.note_controle_2 === '' ? null : note.note_controle_2,
+          note_controle_3: note.note_controle_3 === '' ? null : note.note_controle_3,
+          note_synthese: note.note_synthese === '' ? null : note.note_synthese,
+          note_stage: note.note_stage === '' ? null : note.note_stage,
           annee_scolaire: annee,
           semestre: semestre
         };
@@ -256,6 +249,49 @@ const NotesList = () => {
     if (successCount > 0) {
       notify('success', 'Notes enregistrées', `${successCount} notes ont été mises à jour.`);
       chargerStagiairesEtNotes();
+    }
+  };
+
+  const buildNotePayload = (stagiaireId, data) => ({
+    stagiaire_id: stagiaireId,
+    module_id: moduleId,
+    note_controle_1: data.note_controle_1 === '' ? null : data.note_controle_1,
+    note_controle_2: data.note_controle_2 === '' ? null : data.note_controle_2,
+    note_controle_3: data.note_controle_3 === '' ? null : data.note_controle_3,
+    note_synthese: data.note_synthese === '' ? null : data.note_synthese,
+    note_stage: data.note_stage === '' ? null : data.note_stage,
+    annee_scolaire: annee,
+    semestre,
+  });
+
+  const saveSingleNote = async (stagiaireId, field) => {
+    if (!canEditNotes) return;
+    const current = notesForm[stagiaireId];
+    if (!current) return;
+
+    const cellKey = `${stagiaireId}-${field}`;
+    setSavingCells(prev => ({ ...prev, [cellKey]: true }));
+
+    try {
+      const payload = buildNotePayload(stagiaireId, current);
+      const { data } = current.id
+        ? await api.put(`/notes/${current.id}`, payload)
+        : await api.post('/notes', payload);
+
+      setNotesForm(prev => ({
+        ...prev,
+        [stagiaireId]: {
+          ...prev[stagiaireId],
+          id: data.data.id,
+          note_finale: data.data.note_finale,
+          isDirty: false,
+        }
+      }));
+      notify('success', 'Note enregistrée', 'La valeur a été sauvegardée.');
+    } catch (error) {
+      notify('error', 'Erreur', error.response?.data?.message || 'Impossible de sauvegarder cette note.');
+    } finally {
+      setSavingCells(prev => ({ ...prev, [cellKey]: false }));
     }
   };
 
@@ -308,7 +344,7 @@ const NotesList = () => {
         </div>
       </div>
 
-      <div className="glass rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+      <div className="glass rounded-2xl p-6 sm:p-8 relative overflow-visible">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] text-primary rotate-12 pointer-events-none">
           <BookOpen size={180} />
         </div>
@@ -382,7 +418,7 @@ const NotesList = () => {
 
       <AnimatePresence mode="wait">
         {stagiaires.length > 0 ? (
-          <motion.div 
+          <MotionDiv 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -393,7 +429,7 @@ const NotesList = () => {
                 <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary-light">
                   <AlertCircle size={18} className="text-primary" />
                   <span className="text-xs font-bold uppercase tracking-widest">
-                    {isAnnee2 ? 'Calcul (2A) : (CC × 0.4) + ((EFM + Stage)/2 × 0.6)' : 'Calcul (1A) : (CC × 0.4) + (EFM × 0.6)'}
+                    Finale : moyenne des 3 CC × 0.4 + EFM × 0.6. Stage enregistré séparément.
                   </span>
                 </div>
                 {modules.find(m => m.id === Number(moduleId))?.is_regional && (
@@ -411,7 +447,7 @@ const NotesList = () => {
                 >
                   <Download size={18} /> Export Excel
                 </button>
-                {(user?.role === 'admin' || user?.role === 'formateur') && (
+                {canEditNotes && (
                   <button 
                     onClick={sauvegarderNotes} 
                     disabled={loading}
@@ -442,7 +478,7 @@ const NotesList = () => {
                   {stagiaires.map((stag, i) => {
                     const data = notesForm[stag.id] || {};
                     return (
-                      <motion.tr 
+                      <MotionTr 
                         key={stag.id} 
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -470,47 +506,52 @@ const NotesList = () => {
                         <td className="py-4 px-4">
                           <input 
                             type="number" step="0.25" min="0" max="20"
-                            disabled={user?.role === 'stagiaire'}
+                            disabled={!canEditNotes || savingCells[`${stag.id}-note_controle_1`]}
                             className={`w-16 mx-auto block text-center py-2 px-2 bg-input border rounded-lg text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_1 === '' ? 'border-border' : 'border-primary/40'}`}
                             value={data.note_controle_1}
                             onChange={(e) => handleNoteChange(stag.id, 'note_controle_1', e.target.value)}
+                            onBlur={() => saveSingleNote(stag.id, 'note_controle_1')}
                           />
                         </td>
                         <td className="py-4 px-4">
                           <input 
                             type="number" step="0.25" min="0" max="20"
-                            disabled={user?.role === 'stagiaire'}
+                            disabled={!canEditNotes || savingCells[`${stag.id}-note_controle_2`]}
                             className={`w-16 mx-auto block text-center py-2 px-2 bg-input border rounded-lg text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_2 === '' ? 'border-border' : 'border-primary/40'}`}
                             value={data.note_controle_2}
                             onChange={(e) => handleNoteChange(stag.id, 'note_controle_2', e.target.value)}
+                            onBlur={() => saveSingleNote(stag.id, 'note_controle_2')}
                           />
                         </td>
                         <td className="py-4 px-4">
                           <input 
                             type="number" step="0.25" min="0" max="20"
-                            disabled={user?.role === 'stagiaire'}
+                            disabled={!canEditNotes || savingCells[`${stag.id}-note_controle_3`]}
                             className={`w-16 mx-auto block text-center py-2 px-2 bg-input border rounded-lg text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_3 === '' ? 'border-border' : 'border-primary/40'}`}
                             value={data.note_controle_3}
                             onChange={(e) => handleNoteChange(stag.id, 'note_controle_3', e.target.value)}
+                            onBlur={() => saveSingleNote(stag.id, 'note_controle_3')}
                           />
                         </td>
                         <td className="py-4 px-8">
                           <input 
                             type="number" step="0.25" min="0" max="20"
-                            disabled={user?.role === 'stagiaire'}
+                            disabled={!canEditNotes || savingCells[`${stag.id}-note_synthese`]}
                             className={`w-24 mx-auto block text-center py-2.5 px-4 bg-input border rounded-xl text-sm font-bold text-100 transition-all focus:outline-none focus:ring-4 focus:ring-primary/20 ${data.note_synthese === '' ? 'border-border' : 'border-primary/40 bg-primary/5'}`}
                             value={data.note_synthese}
                             onChange={(e) => handleNoteChange(stag.id, 'note_synthese', e.target.value)}
+                            onBlur={() => saveSingleNote(stag.id, 'note_synthese')}
                           />
                         </td>
                         {isAnnee2 && (
                           <td className="py-4 px-8">
                             <input 
                               type="number" step="0.25" min="0" max="20"
-                              disabled={user?.role === 'stagiaire'}
+                              disabled={!canEditNotes || savingCells[`${stag.id}-note_stage`]}
                               className={`w-24 mx-auto block text-center py-2.5 px-4 bg-input border rounded-xl text-sm font-bold text-100 transition-all focus:outline-none focus:ring-4 focus:ring-primary/20 ${data.note_stage === '' ? 'border-border' : 'border-amber-500/40 bg-amber-500/5'}`}
                               value={data.note_stage}
                               onChange={(e) => handleNoteChange(stag.id, 'note_stage', e.target.value)}
+                              onBlur={() => saveSingleNote(stag.id, 'note_stage')}
                             />
                           </td>
                         )}
@@ -519,15 +560,15 @@ const NotesList = () => {
                             {data.note_finale !== null ? data.note_finale : '--'}
                           </div>
                         </td>
-                      </motion.tr>
+                      </MotionTr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
-          </motion.div>
+          </MotionDiv>
         ) : (
-          <motion.div 
+          <MotionDiv 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="glass rounded-2xl p-20 text-center"
@@ -536,7 +577,7 @@ const NotesList = () => {
               <Users size={64} />
               <p className="font-bold uppercase tracking-[0.2em] text-xs">Aucun stagiaire trouvé. Ajustez vos filtres.</p>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
     </div>
