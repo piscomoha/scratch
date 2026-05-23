@@ -9,6 +9,7 @@ const api = axios.create({
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
+    'bypass-tunnel-reminder': 'true'
   },
 });
 

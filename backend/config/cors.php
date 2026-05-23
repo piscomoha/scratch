@@ -19,7 +19,8 @@ return [
 
     'allowed_methods' => ['*'],
     'allowed_origins' => [
-        env('FRONTEND_URL')
+        env('FRONTEND_URL'),
+        'https://ofpptdigitalhub.vercel.app',
     ],
         
 
