@@ -50,6 +50,28 @@ L'application a été remplie avec des données marocaines factices :
 ## 👨‍💻 Auteur
 
 Développé par **Mohammed Saide** (Stagiaire Développement Digital - OFPPT).
-=======
-# scratch
->>>>>>> 909f929d1e6439f13f73f4d53306bba956952a1e
+
+## ☁️ Déploiement Cloudflare + Vercel
+
+### Backend
+- Copiez `backend/.env.example` vers `backend/.env`
+- Définissez :
+  - `APP_URL=https://xxxxx.trycloudflare.com`
+  - `FRONTEND_URL=https://your-frontend.vercel.app`
+  - `SANCTUM_STATEFUL_DOMAINS=localhost:5173,your-frontend.vercel.app`
+
+### Frontend
+- Copiez `frontend/.env.example` vers `frontend/.env`
+- Définissez :
+  - `VITE_API_URL=https://xxxxx.trycloudflare.com/api`
+- En production sur Vercel, ajoutez également :
+  - `VITE_API_URL=https://xxxxx.trycloudflare.com/api`
+
+### Vercel
+- Le fichier `frontend/vercel.json` est configuré pour rediriger toutes les routes vers `index.html`.
+- Ajoutez la variable d'environnement `VITE_API_URL` dans les paramètres de déploiement Vercel pour pointer vers votre tunnel Cloudflare.
+
+### Remarques
+- En local, le frontend utilise par défaut `http://localhost:8000/api` si `VITE_API_URL` n'est pas défini.
+- Le backend CORS lit `FRONTEND_URL`, donc adaptez-le à votre URL Vercel pour autoriser le frontend.
+- Si vous utilisez l'authentification Sanctum basée sur les cookies, vérifiez que `supports_credentials` est activé dans `backend/config/cors.php`.
