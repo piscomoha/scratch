@@ -28,6 +28,9 @@ class StageResource extends JsonResource
             'statut' => $this->statut,
             'observations' => $this->observations,
             'progression' => $this->progression,
+            'papiers_administratifs_ok' => $this->papiers_administratifs_ok,
+            'soumis_par_stagiaire' => $this->soumis_par_stagiaire,
+            'date_soumission' => $this->date_soumission?->format('Y-m-d H:i'),
             'created_at' => $this->created_at?->format('Y-m-d H:i'),
         ];
     }

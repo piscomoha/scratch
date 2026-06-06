@@ -66,7 +66,10 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (payload) => {
     try {
-      const { data } = await api.put('/auth/profile', payload);
+      const isMultipart = payload instanceof FormData;
+      const { data } = isMultipart
+        ? await api.post('/auth/profile', payload)
+        : await api.put('/auth/profile', payload);
       setUser(data.user);
       return { success: true, user: data.user, message: data.message };
     } catch (error) {

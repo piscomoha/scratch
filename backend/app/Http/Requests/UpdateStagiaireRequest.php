@@ -14,6 +14,8 @@ class UpdateStagiaireRequest extends FormRequest
     public function rules(): array
     {
         $stagiaireId = $this->route('stagiaire');
+        $stagiaire = \App\Models\Stagiaire::find($stagiaireId);
+        $userId = $stagiaire?->user_id;
 
         return [
             'code_massar' => 'sometimes|string|unique:stagiaires,code_massar,' . $stagiaireId,
@@ -22,7 +24,10 @@ class UpdateStagiaireRequest extends FormRequest
             'date_naissance' => 'sometimes|date|before:today',
             'genre' => 'sometimes|in:M,F',
             'telephone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:255',
+            'email' => 'nullable|email|max:255|unique:users,email,' . $userId,
+            'account_name' => 'nullable|string|max:255',
+            'account_email' => 'nullable|email|max:255|unique:users,email,' . $userId,
+            'account_password' => 'nullable|string|min:8',
             'adresse' => 'nullable|string|max:255',
             'ville' => 'nullable|string|max:100',
             'photo' => 'nullable|image|max:2048',

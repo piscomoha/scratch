@@ -86,13 +86,25 @@
   html {
     transition: background-color 0.3s ease, color 0.3s ease;
     scroll-behavior: smooth;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-background antialiased;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
     color: var(--text-100);
     font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  #root {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   input, select, textarea {

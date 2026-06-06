@@ -25,6 +25,9 @@ class Stage extends Model
         'rapport_path',
         'statut',
         'observations',
+        'papiers_administratifs_ok',
+        'soumis_par_stagiaire',
+        'date_soumission',
     ];
 
     protected function casts(): array
@@ -35,6 +38,9 @@ class Stage extends Model
             'note_entreprise' => 'decimal:2',
             'rapport_soumis' => 'boolean',
             'duree_semaines' => 'integer',
+            'papiers_administratifs_ok' => 'boolean',
+            'soumis_par_stagiaire' => 'boolean',
+            'date_soumission' => 'datetime',
         ];
     }
 

@@ -19,12 +19,16 @@ class Presence extends Model
         'motif',
         'justificatif',
         'formateur_id',
+        'shared_with_admin',
+        'shared_at',
     ];
 
     protected function casts(): array
     {
         return [
             'date_seance' => 'date',
+            'shared_with_admin' => 'boolean',
+            'shared_at' => 'datetime',
         ];
     }
 

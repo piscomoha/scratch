@@ -40,7 +40,7 @@ const MainLayout = () => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   return (
-    <div className="min-h-screen bg-diamond-pattern flex overflow-x-hidden">
+    <div className="min-h-screen w-full max-w-full bg-diamond-pattern flex overflow-x-hidden">
 
       {/* Mobile sidebar overlay */}
       {isSidebarOpen && (
@@ -57,13 +57,14 @@ const MainLayout = () => {
       <Sidebar />
 
       {/* Main content area — offset by sidebar width on desktop */}
-      <div className="flex-1 flex flex-col min-h-screen lg:pl-64">
+      <div className="flex-1 min-w-0 w-full max-w-full flex flex-col min-h-screen lg:pl-64">
         <Header />
-        <main className="flex-1 px-4 sm:px-6 md:px-8 py-6 overflow-x-hidden overflow-y-auto w-full">
+        <main className="flex-1 w-full max-w-full min-w-0 px-4 sm:px-6 md:px-8 py-6 overflow-x-hidden overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="w-full max-w-full min-w-0"
           >
             <Outlet />
           </motion.div>

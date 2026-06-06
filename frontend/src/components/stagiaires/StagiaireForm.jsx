@@ -6,7 +6,12 @@ import { User, Mail, Phone, MapPin, Calendar, BookOpen, GraduationCap, Hash, Che
 
 const StagiaireForm = ({ filieres, onClose, initialData = null }) => {
   const { register, handleSubmit, control, formState: { errors } } = useForm({
-    defaultValues: initialData || {}
+    defaultValues: initialData ? {
+      ...initialData,
+      account_name: initialData.user?.name || initialData.nom_complet || '',
+      account_email: initialData.user?.email || initialData.email || '',
+      account_password: '',
+    } : {}
   });
   const createMutation = useCreateStagiaire();
   const updateMutation = useUpdateStagiaire();
@@ -260,6 +265,52 @@ const StagiaireForm = ({ filieres, onClose, initialData = null }) => {
         </div>
       </div>
 
+      <div className="rounded-2xl border border-border bg-overlay p-5 sm:p-6 space-y-5">
+        <div>
+          <h4 className="text-sm font-black text-100">Compte d'inscription</h4>
+          <p className="text-xs text-500 mt-1">Informations utilisées par le stagiaire pour se connecter.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-1">
+            <label className={labelClasses}>Nom du compte</label>
+            <div className="relative group">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
+              <input
+                {...register('account_name')}
+                className={`${inputClasses} pl-12`}
+                placeholder="Nom affiché au login"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className={labelClasses}>Email de connexion</label>
+            <div className="relative group">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
+              <input
+                type="email"
+                {...register('account_email')}
+                className={`${inputClasses} pl-12`}
+                placeholder="email de connexion"
+              />
+            </div>
+          </div>
+
+          {isEditing && (
+            <div className="md:col-span-2 space-y-1">
+              <label className={labelClasses}>Nouveau mot de passe</label>
+              <input
+                type="password"
+                {...register('account_password')}
+                className={inputClasses}
+                placeholder="Laisser vide pour garder l'ancien mot de passe"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 mt-8 sm:mt-10 pt-6 border-t border-border">
         <button
           type="button"
@@ -282,4 +333,3 @@ const StagiaireForm = ({ filieres, onClose, initialData = null }) => {
 };
 
 export default StagiaireForm;
-

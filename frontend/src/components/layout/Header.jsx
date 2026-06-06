@@ -44,14 +44,14 @@ const Header = () => {
 
   return (
     <header
-      className="h-16 flex items-center justify-between px-4 sm:px-6 md:px-8 sticky top-0 z-40"
+      className="h-16 w-full max-w-full min-w-0 flex items-center justify-between px-4 sm:px-6 md:px-8 sticky top-0 z-40"
       style={{
         background: '#2660A4',
         boxShadow: '0 2px 16px rgba(38,96,164,0.18)',
       }}
     >
       {/* ── Left ── */}
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         {/* Mobile burger */}
         <button
           onClick={toggleSidebar}
@@ -83,7 +83,7 @@ const Header = () => {
       </div>
 
       {/* ── Right ── */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex min-w-0 flex-shrink-0 items-center gap-2 sm:gap-3">
         <ThemeToggle />
 
         {/* Notifications */}
@@ -109,7 +109,7 @@ const Header = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-80 rounded-2xl overflow-hidden z-50"
+                  className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 rounded-2xl overflow-hidden z-50"
                   style={{
                     background: 'var(--surface)',
                     border: '1px solid var(--border)',
@@ -182,7 +182,7 @@ const Header = () => {
         </div>
 
         {/* User */}
-        <div className="flex items-center gap-3 pl-3 border-l" style={{ borderColor: 'rgba(255,255,255,0.15)' }}>
+        <div className="hidden sm:flex items-center gap-3 pl-3 border-l" style={{ borderColor: 'rgba(255,255,255,0.15)' }}>
           <div className="hidden sm:block text-right">
             <p className="text-xs font-bold text-white leading-none mb-0.5 truncate max-w-[120px]">{user?.name}</p>
             <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">{user?.role}</p>

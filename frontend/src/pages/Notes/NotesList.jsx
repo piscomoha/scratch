@@ -344,14 +344,14 @@ const NotesList = () => {
         </div>
       </div>
 
-      <div className="glass rounded-2xl p-6 sm:p-8 relative overflow-visible">
+      <div className="glass rounded-xl sm:rounded-2xl p-3 sm:p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] text-primary rotate-12 pointer-events-none">
           <BookOpen size={180} />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 relative z-10">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Filière</label>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5 sm:gap-3 lg:gap-6 relative z-10">
+          <div className="space-y-1 sm:space-y-2">
+            <label className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-500 ml-0.5 sm:ml-1">Filière</label>
             <CustomSelect
               options={[
                 { value: '', label: 'Sélectionner' },
@@ -362,53 +362,53 @@ const NotesList = () => {
               placeholder="Filière"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Groupe</label>
+          <div className="space-y-1 sm:space-y-2">
+            <label className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-500 ml-0.5 sm:ml-1">Groupe</label>
             <div className="relative group">
-              <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
+              <Users className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 sm:w-4 h-3.5 sm:h-4 text-500 group-focus-within:text-primary transition-colors" />
               <input 
                 type="text" 
-                placeholder="Ex: DEV201" 
-                className="w-full bg-input border border-border rounded-xl py-2.5 pl-12 pr-4 text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-500"
+                placeholder="DEV201" 
+                className="w-full bg-input border border-border rounded-lg sm:rounded-xl py-2 sm:py-2.5 pl-9 sm:pl-10 pr-2 sm:pr-4 text-xs sm:text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-500"
                 value={groupe} 
                 onChange={(e) => setGroupe(e.target.value.toUpperCase())} 
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Semestre</label>
+          <div className="space-y-1 sm:space-y-2">
+            <label className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-500 ml-0.5 sm:ml-1">Semestre</label>
             <CustomSelect
               options={[
-                { value: '1', label: 'Semestre 1' },
-                { value: '2', label: 'Semestre 2' }
+                { value: '1', label: 'Sem 1' },
+                { value: '2', label: 'Sem 2' }
               ]}
               value={semestre}
               onChange={setSemestre}
             />
           </div>
-          <div className="sm:col-span-2 lg:col-span-2 space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-500 ml-1">Module</label>
+          <div className="col-span-1 sm:col-span-2 lg:col-span-2 space-y-1 sm:space-y-2">
+            <label className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-500 ml-0.5 sm:ml-1">Module</label>
             <CustomSelect
               options={[
-                { value: '', label: 'Sélectionner un module' },
+                { value: '', label: 'Sélectionner' },
                 ...modules.map(m => ({ 
                   value: m.id, 
-                  label: `${m.code} - ${m.intitule}${m.is_regional ? ' (RÉGIONAL)' : ''}` 
+                  label: `${m.code} - ${m.intitule}${m.is_regional ? ' (REG)' : ''}` 
                 }))
               ]}
               value={moduleId}
               onChange={setModuleId}
               disabled={!filiereId}
-              placeholder="Sélectionner un module"
+              placeholder="Module"
             />
           </div>
         </div>
         
-        <div className="mt-8 pt-8 border-t border-border flex justify-end">
+        <div className="mt-4 sm:mt-8 pt-4 sm:pt-8 border-t border-border flex justify-end">
           <button 
             onClick={chargerStagiairesEtNotes} 
             disabled={loading}
-            className="btn-primary py-3.5 px-8"
+            className="btn-primary py-2 sm:py-3.5 px-4 sm:px-8 text-xs sm:text-base whitespace-nowrap"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BookOpen size={18} />}
             Afficher la liste
@@ -422,56 +422,57 @@ const NotesList = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="glass rounded-2xl overflow-hidden flex flex-col"
+            className="glass rounded-xl sm:rounded-2xl overflow-hidden flex flex-col"
           >
-            <div className="p-6 border-b border-border flex flex-col md:flex-row justify-between items-center bg-overlay gap-6">
-              <div className="flex flex-col md:flex-row items-center gap-3">
-                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary-light">
-                  <AlertCircle size={18} className="text-primary" />
-                  <span className="text-xs font-bold uppercase tracking-widest">
-                    Finale : moyenne des 3 CC × 0.4 + EFM × 0.6. Stage enregistré séparément.
+            <div className="p-3 sm:p-6 border-b border-border flex flex-col md:flex-row justify-between items-start md:items-center bg-overlay gap-3 md:gap-6">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-3 w-full md:w-auto">
+                <div className="flex items-start md:items-center gap-2 md:gap-3 px-2 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-xl bg-primary/10 border border-primary/20 text-primary-light">
+                  <AlertCircle size={14} className="text-primary flex-shrink-0 mt-0.5 md:mt-0" />
+                  <span className="text-[8px] md:text-xs font-bold uppercase tracking-widest leading-tight">
+                    Finale: CC×0.4+EFM×0.6
                   </span>
                 </div>
                 {modules.find(m => m.id === Number(moduleId))?.is_regional && (
-                  <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500">
-                    <Shield size={18} className="text-amber-500" />
-                    <span className="text-xs font-bold uppercase tracking-widest italic">Module Régional</span>
+                  <div className="flex items-center gap-2 px-2 md:px-4 py-1.5 md:py-2.5 rounded-lg md:rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500">
+                    <Shield size={14} className="text-amber-500 flex-shrink-0" />
+                    <span className="text-[8px] md:text-xs font-bold uppercase tracking-widest italic">REG</span>
                   </div>
                 )}
               </div>
               
-              <div className="flex gap-3">
+              <div className="flex gap-2 w-full md:w-auto">
                 <button 
                   onClick={exportExcel}
-                  className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-6 py-3 rounded-2xl hover:bg-emerald-500/20 transition-all font-bold text-sm border border-emerald-500/20"
+                  className="flex items-center justify-center gap-1.5 text-emerald-400 bg-emerald-500/10 px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl hover:bg-emerald-500/20 transition-all font-bold text-xs md:text-sm border border-emerald-500/20 flex-1 md:flex-none"
                 >
-                  <Download size={18} /> Export Excel
+                  <Download size={14} className="md:w-[18px] md:h-[18px]" /> <span className="hidden md:inline">Export</span>
                 </button>
                 {canEditNotes && (
                   <button 
                     onClick={sauvegarderNotes} 
                     disabled={loading}
-                    className="btn-primary px-6 py-2.5"
+                    className="btn-primary px-3 md:px-6 py-2 md:py-2.5 text-xs md:text-base flex-1 md:flex-none"
                   >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save size={18} />}
-                    Sauvegarder
+                    {loading ? <Loader2 className="w-4 md:w-5 h-4 md:h-5 animate-spin" /> : <Save size={14} className="md:w-[18px] md:h-[18px]" />}
+                    <span className="hidden md:inline">Sauvegarder</span>
                   </button>
                 )}
               </div>
             </div>
             
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto overflow-y-hidden w-full">
+              <table className="w-full text-left border-collapse text-xs sm:text-sm"
+                   style={{ minWidth: '600px' }}>
                 <thead>
                   <tr style={{ background:'rgba(38,96,164,0.05)', borderBottom:'2px solid var(--border)' }}>
-                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap w-16">#</th>
-                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap min-w-[200px]">Stagiaire</th>
-                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">CC1</th>
-                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">CC2</th>
-                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">CC3</th>
-                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">EFM (Synt.)</th>
-                    {isAnnee2 && <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">Stage</th>}
-                    <th className="py-3 px-4 sm:px-6 text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">Finale</th>
+                    <th className="py-2 sm:py-3 px-2 sm:px-4 lg:px-6 text-[9px] sm:text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap w-8 sm:w-12">#</th>
+                    <th className="py-2 sm:py-3 px-2 sm:px-4 lg:px-6 text-[9px] sm:text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap min-w-[120px] sm:min-w-[200px]">Stagiaire</th>
+                    <th className="py-2 sm:py-3 px-1 sm:px-3 lg:px-6 text-[9px] sm:text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">CC1</th>
+                    <th className="py-2 sm:py-3 px-1 sm:px-3 lg:px-6 text-[9px] sm:text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">CC2</th>
+                    <th className="py-2 sm:py-3 px-1 sm:px-3 lg:px-6 text-[9px] sm:text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">CC3</th>
+                    <th className="py-2 sm:py-3 px-1 sm:px-4 lg:px-6 text-[9px] sm:text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center hidden sm:table-cell">EFM</th>
+                    {isAnnee2 && <th className="py-2 sm:py-3 px-1 sm:px-4 lg:px-6 text-[9px] sm:text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center hidden md:table-cell">Stage</th>}
+                    <th className="py-2 sm:py-3 px-1 sm:px-4 lg:px-6 text-[9px] sm:text-[10px] font-black text-500 uppercase tracking-widest whitespace-nowrap text-center">Finale</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -486,11 +487,11 @@ const NotesList = () => {
                         className={`group transition-all duration-300 ${data.isDirty ? 'bg-primary/[0.03]' : 'hover:bg-overlay'}`}
                       >
                         <td className="py-4 px-8 text-500 font-bold text-sm">{i + 1}</td>
-                        <td className="py-4 px-8">
-                          <div className="flex items-center gap-3 group/name">
-                            <div>
-                              <div className="font-bold text-100 group-hover:text-primary transition-colors">{stag.nom_complet}</div>
-                              <div className="text-[10px] uppercase font-bold tracking-widest text-500 mt-1">{stag.code_massar}</div>
+                        <td className="py-3 sm:py-4 px-2 sm:px-4 lg:px-8">
+                          <div className="flex items-center gap-2 sm:gap-3 group/name">
+                            <div className="min-w-0">
+                              <div className="font-bold text-100 group-hover:text-primary transition-colors truncate text-xs sm:text-base">{stag.nom_complet}</div>
+                              <div className="text-[8px] sm:text-[10px] uppercase font-bold tracking-widest text-500 mt-0.5 truncate">{stag.code_massar}</div>
                             </div>
                             {stag.stage && (
                               <button 
@@ -503,60 +504,60 @@ const NotesList = () => {
                             )}
                           </div>
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-3 sm:py-4 px-1 sm:px-3 lg:px-4">
                           <input 
                             type="number" step="0.25" min="0" max="20"
                             disabled={!canEditNotes || savingCells[`${stag.id}-note_controle_1`]}
-                            className={`w-16 mx-auto block text-center py-2 px-2 bg-input border rounded-lg text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_1 === '' ? 'border-border' : 'border-primary/40'}`}
+                            className={`w-12 sm:w-16 mx-auto block text-center py-1.5 sm:py-2 px-1 sm:px-2 bg-input border rounded-lg text-[10px] sm:text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_1 === '' ? 'border-border' : 'border-primary/40'}`}
                             value={data.note_controle_1}
                             onChange={(e) => handleNoteChange(stag.id, 'note_controle_1', e.target.value)}
                             onBlur={() => saveSingleNote(stag.id, 'note_controle_1')}
                           />
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-3 sm:py-4 px-1 sm:px-3 lg:px-4">
                           <input 
                             type="number" step="0.25" min="0" max="20"
                             disabled={!canEditNotes || savingCells[`${stag.id}-note_controle_2`]}
-                            className={`w-16 mx-auto block text-center py-2 px-2 bg-input border rounded-lg text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_2 === '' ? 'border-border' : 'border-primary/40'}`}
+                            className={`w-12 sm:w-16 mx-auto block text-center py-1.5 sm:py-2 px-1 sm:px-2 bg-input border rounded-lg text-[10px] sm:text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_2 === '' ? 'border-border' : 'border-primary/40'}`}
                             value={data.note_controle_2}
                             onChange={(e) => handleNoteChange(stag.id, 'note_controle_2', e.target.value)}
                             onBlur={() => saveSingleNote(stag.id, 'note_controle_2')}
                           />
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-3 sm:py-4 px-1 sm:px-3 lg:px-4">
                           <input 
                             type="number" step="0.25" min="0" max="20"
                             disabled={!canEditNotes || savingCells[`${stag.id}-note_controle_3`]}
-                            className={`w-16 mx-auto block text-center py-2 px-2 bg-input border rounded-lg text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_3 === '' ? 'border-border' : 'border-primary/40'}`}
+                            className={`w-12 sm:w-16 mx-auto block text-center py-1.5 sm:py-2 px-1 sm:px-2 bg-input border rounded-lg text-[10px] sm:text-xs font-bold text-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/20 ${data.note_controle_3 === '' ? 'border-border' : 'border-primary/40'}`}
                             value={data.note_controle_3}
                             onChange={(e) => handleNoteChange(stag.id, 'note_controle_3', e.target.value)}
                             onBlur={() => saveSingleNote(stag.id, 'note_controle_3')}
                           />
                         </td>
-                        <td className="py-4 px-8">
+                        <td className="py-3 sm:py-4 px-1 sm:px-4 lg:px-8 hidden sm:table-cell">
                           <input 
                             type="number" step="0.25" min="0" max="20"
                             disabled={!canEditNotes || savingCells[`${stag.id}-note_synthese`]}
-                            className={`w-24 mx-auto block text-center py-2.5 px-4 bg-input border rounded-xl text-sm font-bold text-100 transition-all focus:outline-none focus:ring-4 focus:ring-primary/20 ${data.note_synthese === '' ? 'border-border' : 'border-primary/40 bg-primary/5'}`}
+                            className={`w-14 sm:w-20 mx-auto block text-center py-1.5 sm:py-2.5 px-2 sm:px-3 bg-input border rounded-lg sm:rounded-xl text-[10px] sm:text-sm font-bold text-100 transition-all focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-primary/20 ${data.note_synthese === '' ? 'border-border' : 'border-primary/40 bg-primary/5'}`}
                             value={data.note_synthese}
                             onChange={(e) => handleNoteChange(stag.id, 'note_synthese', e.target.value)}
                             onBlur={() => saveSingleNote(stag.id, 'note_synthese')}
                           />
                         </td>
                         {isAnnee2 && (
-                          <td className="py-4 px-8">
+                          <td className="py-3 sm:py-4 px-1 sm:px-4 lg:px-8 hidden md:table-cell">
                             <input 
                               type="number" step="0.25" min="0" max="20"
                               disabled={!canEditNotes || savingCells[`${stag.id}-note_stage`]}
-                              className={`w-24 mx-auto block text-center py-2.5 px-4 bg-input border rounded-xl text-sm font-bold text-100 transition-all focus:outline-none focus:ring-4 focus:ring-primary/20 ${data.note_stage === '' ? 'border-border' : 'border-amber-500/40 bg-amber-500/5'}`}
+                              className={`w-14 sm:w-20 mx-auto block text-center py-1.5 sm:py-2.5 px-2 sm:px-3 bg-input border rounded-lg sm:rounded-xl text-[10px] sm:text-sm font-bold text-100 transition-all focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-primary/20 ${data.note_stage === '' ? 'border-border' : 'border-amber-500/40 bg-amber-500/5'}`}
                               value={data.note_stage}
                               onChange={(e) => handleNoteChange(stag.id, 'note_stage', e.target.value)}
                               onBlur={() => saveSingleNote(stag.id, 'note_stage')}
                             />
                           </td>
                         )}
-                        <td className="py-4 px-8 bg-overlay text-center">
-                          <div className={`text-xl font-black ${data.note_finale !== null ? (data.note_finale >= 10 ? 'text-emerald-400' : 'text-rose-400') : 'text-500'}`}>
+                        <td className="py-3 sm:py-4 px-1 sm:px-4 lg:px-8 bg-overlay text-center">
+                          <div className={`text-base sm:text-xl font-black ${data.note_finale !== null ? (data.note_finale >= 10 ? 'text-emerald-400' : 'text-rose-400') : 'text-500'}`}>
                             {data.note_finale !== null ? data.note_finale : '--'}
                           </div>
                         </td>

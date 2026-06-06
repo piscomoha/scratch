@@ -161,9 +161,43 @@ const StagiaireDetails = ({ stagiaireId }) => {
           </div>
         </motion.div>
       </div>
+
+      {stagiaire.user && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="glass rounded-[2.5rem] p-8"
+        >
+          <h3 className="text-lg font-bold text-100 mb-6 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <User size={18} />
+            </div>
+            Compte d'inscription
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-2xl bg-overlay border border-border">
+              <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-2">Nom du compte</p>
+              <p className="text-sm font-bold text-100 truncate">{stagiaire.user.name}</p>
+            </div>
+            <div className="p-5 rounded-2xl bg-overlay border border-border">
+              <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-2">Email de connexion</p>
+              <p className="text-sm font-bold text-100 truncate">{stagiaire.user.email}</p>
+            </div>
+            <div className="p-5 rounded-2xl bg-overlay border border-border">
+              <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-2">Rôle</p>
+              <p className="text-sm font-bold text-100 uppercase">{stagiaire.user.role}</p>
+            </div>
+            <div className="p-5 rounded-2xl bg-overlay border border-border">
+              <p className="text-[10px] font-black uppercase tracking-widest text-500 mb-2">Inscrit le</p>
+              <p className="text-sm font-bold text-100">{stagiaire.user.created_at || 'Non renseigné'}</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };
 
 export default StagiaireDetails;
-

@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/auth/profile', [AuthController::class, 'updateProfile']);
     Route::put('/auth/password', [AuthController::class, 'updatePassword']);
 
     // Notifications
@@ -90,18 +91,29 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Présences
     Route::get('/presences', [PresenceController::class, 'index']);
+    Route::get('/presences/summary', [PresenceController::class, 'summary']);
     Route::get('/presences/stats/{stagiaire}', [PresenceController::class, 'stats']);
     Route::middleware('role:admin,formateur')->group(function () {
         Route::post('/presences', [PresenceController::class, 'store']);
         Route::post('/presences/bulk', [PresenceController::class, 'bulk']);
+        Route::post('/presences/share', [PresenceController::class, 'share']);
         Route::put('/presences/{presence}', [PresenceController::class, 'update']);
     });
 
     // Stages
     Route::get('/stages', [StageController::class, 'index']);
+    Route::get('/stages/my-stage', [StageController::class, 'myStage']);
     Route::get('/stages/{stage}', [StageController::class, 'show']);
-    Route::middleware('role:admin,formateur')->group(function () {
+
+    // Stages — soumission par le stagiaire
+    Route::middleware('role:stagiaire')->group(function () {
+        Route::post('/stages/submit-form', [StageController::class, 'submitForm']);
+    });
+
+    // Stages — gestion admin uniquement
+    Route::middleware('role:admin')->group(function () {
         Route::post('/stages', [StageController::class, 'store']);
         Route::put('/stages/{stage}', [StageController::class, 'update']);
+        Route::post('/stages/check-notifications', [StageController::class, 'checkNotifications']);
     });
 });

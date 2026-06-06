@@ -3,21 +3,16 @@ import { useStagiaires, useFilieres } from '../../hooks/useQueries';
 import { useAuth } from '../../context/AuthContext';
 import { Search, Filter, Edit2, Eye, Trash2, Plus, UserCircle, Mail, Hash } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api from '../../api/axios';
-import { useQueryClient } from '@tanstack/react-query';
 import Modal from '../../components/ui/Modal';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import CustomSelect from '../../components/ui/CustomSelect';
 import StagiaireForm from '../../components/stagiaires/StagiaireForm';
 import StagiaireDetails from '../../components/stagiaires/StagiaireDetails';
 import { useDeleteStagiaire } from '../../hooks/useQueries';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNotification } from '../../context/NotificationContext';
+import { motion as Motion } from 'framer-motion';
 
 const StagiairesList = () => {
   const { user } = useAuth();
-  const { notify } = useNotification();
-  const queryClient = useQueryClient();
   const [filters, setFilters] = useState({ search: '', filiere_id: '', statut: '', groupe: '', page: 1 });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -55,10 +50,20 @@ const StagiairesList = () => {
 
   const statuts = ['actif', 'suspendu', 'diplome', 'abandon'];
 
+  const getStatutClass = (statut) => {
+    switch (statut) {
+      case 'actif': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'suspendu': return 'bg-red-50 text-red-600 border-red-200';
+      case 'diplome': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'abandon': return 'bg-gray-50 text-gray-500 border-gray-200';
+      default: return 'bg-slate-50 text-slate-500 border-slate-200';
+    }
+  };
+
   return (
-    <div className="space-y-6 pb-10">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+    <div className="w-full max-w-full min-w-0 space-y-6 pb-10 overflow-x-hidden">
+      <div className="flex w-full min-w-0 flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="min-w-0">
           <div className="flex items-center gap-2 mb-2">
             <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#2E8B57', borderRadius:1 }} />
             <div style={{ width:8, height:8, transform:'rotate(45deg)', background:'#8C9BA8', borderRadius:1 }} />
@@ -71,7 +76,7 @@ const StagiairesList = () => {
         {user?.role === 'admin' && (
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="btn-primary flex-shrink-0"
+            className="btn-primary max-w-full flex-shrink-0"
           >
             <Plus size={16} strokeWidth={2.5} /> Ajouter un stagiaire
           </button>
@@ -79,24 +84,24 @@ const StagiairesList = () => {
       </div>
 
       {/* Filters Section */}
-      <div className="glass rounded-2xl p-4 sm:p-6">
-        <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-6 items-end">
-          <div className="sm:col-span-2 lg:col-span-6 relative group">
-            <label className="block text-[10px] sm:text-xs font-bold text-500 uppercase tracking-widest mb-2 ml-1">Recherche</label>
+      <div className="glass w-full max-w-full min-w-0 rounded-xl sm:rounded-2xl p-2 sm:p-6">
+        <form onSubmit={handleSearch} className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-12 sm:gap-3 lg:gap-6 items-end">
+          <div className="col-span-1 min-w-0 sm:col-span-3 lg:col-span-6 relative group">
+            <label className="block text-[8px] sm:text-xs font-bold text-500 uppercase tracking-widest mb-1 sm:mb-2 ml-0.5 sm:ml-1">Recherche</label>
             <div className="relative">
-              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-500 group-focus-within:text-primary transition-colors" />
+              <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 sm:w-4 h-3.5 sm:h-4 text-500 group-focus-within:text-primary transition-colors" />
               <input 
                 type="text" 
-                placeholder="Nom, Prénom, Code..." 
-                className="w-full bg-input border border-border rounded-xl py-2 sm:py-2.5 pl-10 sm:pl-12 pr-3 sm:pr-4 text-xs sm:text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-500"
+                placeholder="Nom, Code..." 
+                className="w-full bg-input border border-border rounded-lg py-2 sm:py-2.5 pl-9 sm:pl-10 pr-2 sm:pr-3 text-xs sm:text-sm text-100 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-500"
                 value={filters.search}
                 onChange={(e) => setFilters({...filters, search: e.target.value, page: 1})}
               />
             </div>
           </div>
 
-          <div className="sm:col-span-1 lg:col-span-3">
-            <label className="block text-[10px] sm:text-xs font-bold text-500 uppercase tracking-widest mb-2 ml-1">Filière</label>
+          <div className="col-span-1 min-w-0 sm:col-span-1 lg:col-span-3">
+            <label className="block text-[8px] sm:text-xs font-bold text-500 uppercase tracking-widest mb-1 sm:mb-2 ml-0.5 sm:ml-1">Filière</label>
             <CustomSelect
               options={[
                 { value: '', label: 'Toutes' },
@@ -108,8 +113,8 @@ const StagiairesList = () => {
             />
           </div>
 
-          <div className="sm:col-span-1 lg:col-span-3">
-            <label className="block text-[10px] sm:text-xs font-bold text-500 uppercase tracking-widest mb-2 ml-1">Statut</label>
+          <div className="col-span-1 min-w-0 sm:col-span-1 lg:col-span-3">
+            <label className="block text-[8px] sm:text-xs font-bold text-500 uppercase tracking-widest mb-1 sm:mb-2 ml-0.5 sm:ml-1">Statut</label>
             <CustomSelect
               options={[
                 { value: '', label: 'Tous' },
@@ -123,9 +128,93 @@ const StagiairesList = () => {
         </form>
       </div>
 
-      {/* Table Section */}
-      <div className="glass rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
+      {/* Responsive List Section */}
+      <div className="glass w-full max-w-full min-w-0 rounded-2xl overflow-hidden">
+        <div className="md:hidden p-3 sm:p-4 space-y-4">
+          {isLoading ? (
+            <div className="py-12 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-8 w-8 border-t-2 border-primary rounded-full animate-spin" />
+                <span className="text-500 font-medium text-xs">Chargement...</span>
+              </div>
+            </div>
+          ) : stagiairesData?.data?.length === 0 ? (
+            <div className="py-12 text-center text-500 font-medium italic text-xs">Aucun stagiaire trouvé.</div>
+          ) : (
+            stagiairesData?.data?.map((stagiaire, index) => (
+              <Motion.div
+                key={stagiaire.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04 }}
+                className="glass w-full max-w-full min-w-0 overflow-hidden rounded-2xl border border-border p-3 sm:p-4 space-y-4"
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="h-12 w-12 flex-shrink-0 rounded-2xl flex items-center justify-center font-black text-white text-sm overflow-hidden"
+                    style={{ background: 'linear-gradient(135deg, #2E8B57, #2660A4)' }}>
+                    {stagiaire.photo
+                      ? <img src={stagiaire.photo} alt={stagiaire.nom} className="h-full w-full object-cover" />
+                      : stagiaire.nom_complet?.charAt(0)
+                    }
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-100 truncate text-sm">{stagiaire.nom_complet}</p>
+                    <p className="text-[11px] text-500 flex items-center gap-1 mt-1 truncate">
+                      <Mail className="w-3 h-3 flex-shrink-0" /> {stagiaire.email || '—'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid min-w-0 grid-cols-2 gap-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="truncate text-[10px] uppercase tracking-[0.18em] text-500 mb-1">Filière / groupe</p>
+                    <p className="font-bold text-100 truncate">{stagiaire.filiere?.code || 'À compléter'}</p>
+                    <p className="text-[11px] text-500 truncate">{stagiaire.groupe || 'Groupe à compléter'}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-[10px] uppercase tracking-[0.18em] text-500 mb-1">Code Massar</p>
+                    <p className="font-bold text-100 truncate">{stagiaire.code_massar || '—'}</p>
+                  </div>
+                </div>
+
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <span className={`max-w-full truncate px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-full border inline-block ${getStatutClass(stagiaire.statut)}`}>
+                    {stagiaire.statut}
+                  </span>
+                  <div className="flex flex-wrap items-center justify-end gap-1.5">
+                    <button
+                      className="p-2 rounded-xl text-500 hover:text-secondary hover:bg-overlay transition-all"
+                      title="Voir profil"
+                      onClick={() => { setSelectedStagiaireId(stagiaire.id); setIsDetailsModalOpen(true); }}
+                    >
+                      <Eye size={16} />
+                    </button>
+                    {user?.role === 'admin' && (
+                      <>
+                        <button
+                          className="p-2 rounded-xl text-500 hover:text-primary hover:bg-overlay transition-all"
+                          title="Modifier"
+                          onClick={() => { setStagiaireToEdit(stagiaire); setIsEditModalOpen(true); }}
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          className="p-2 rounded-xl text-500 hover:text-red-500 hover:bg-red-50 transition-all"
+                          title="Supprimer"
+                          onClick={() => { setStagiaireToDelete(stagiaire); setIsDeleteModalOpen(true); }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+</Motion.div>
+            ))
+          )}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto -mx-4 sm:mx-0">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr style={{ background:'rgba(38,96,164,0.05)', borderBottom:'2px solid var(--border)' }}>
@@ -152,7 +241,7 @@ const StagiairesList = () => {
                 </tr>
               ) : (
                 stagiairesData?.data?.map((stagiaire, index) => (
-                  <motion.tr 
+                  <Motion.tr 
                     key={stagiaire.id}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -187,12 +276,7 @@ const StagiairesList = () => {
                       </div>
                     </td>
                     <td className="py-3 px-4 sm:px-6">
-                      <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full border whitespace-nowrap inline-block
-                        ${stagiaire.statut === 'actif'    ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ''}
-                        ${stagiaire.statut === 'suspendu' ? 'bg-red-50 text-red-600 border-red-200'             : ''}
-                        ${stagiaire.statut === 'diplome'  ? 'bg-blue-50 text-blue-700 border-blue-200'          : ''}
-                        ${stagiaire.statut === 'abandon'  ? 'bg-gray-50 text-gray-500 border-gray-200'          : ''}
-                      `}>
+                      <span className={`px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full border whitespace-nowrap inline-block ${getStatutClass(stagiaire.statut)}`}>
                         {stagiaire.statut}
                       </span>
                     </td>
@@ -225,7 +309,7 @@ const StagiairesList = () => {
                         )}
                       </div>
                     </td>
-                  </motion.tr>
+                  </Motion.tr>
                 ))
               )}
             </tbody>

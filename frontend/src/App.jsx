@@ -6,12 +6,24 @@ import Dashboard from './pages/Dashboard';
 import StagiairesList from './pages/Stagiaires/StagiairesList';
 
 import PresencesList from './pages/Presences/PresencesList';
+import AdminPresences from './pages/Presences/AdminPresences';
 import NotesList from './pages/Notes/NotesList';
 
 import StagesList from './pages/Stages/StagesList';
+import StageForm from './pages/Stages/StageForm';
 import Settings from './pages/Settings/Settings';
 import Assignments from './pages/Admin/Assignments';
 import Documents from './pages/Admin/Documents';
+import { useAuth } from './context/AuthContext';
+
+// Composant wrapper pour choisir la page de présence selon le rôle
+const PresencesRoute = () => {
+  const { user } = useAuth();
+  if (user?.role === 'admin') {
+    return <AdminPresences />;
+  }
+  return <PresencesList />;
+};
 
 // Composant placeholder pour les pages en cours de développement
 const Placeholder = ({ title }) => (
@@ -35,8 +47,9 @@ function App() {
         {/* Pages à créer ensuite */}
         <Route path="/stagiaires" element={<StagiairesList />} />
         <Route path="/notes" element={<NotesList />} />
-        <Route path="/presences" element={<PresencesList />} />
+        <Route path="/presences" element={<PresencesRoute />} />
         <Route path="/stages" element={<StagesList />} />
+        <Route path="/stages/submit" element={<StageForm />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/admin/assignments" element={<Assignments />} />
         <Route path="/admin/documents" element={<Documents />} />

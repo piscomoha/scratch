@@ -31,6 +31,15 @@ class StagiaireResource extends JsonResource
             'notes' => NoteResource::collection($this->whenLoaded('notes')),
             'presences' => PresenceResource::collection($this->whenLoaded('presences')),
             'stage' => new StageResource($this->whenLoaded('stage')),
+            'user' => $this->whenLoaded('user', fn () => $this->user ? [
+                'id' => $this->user->id,
+                'name' => $this->user->name,
+                'email' => $this->user->email,
+                'role' => $this->user->role,
+                'avatar' => $this->user->avatar ? url('storage/' . $this->user->avatar) : null,
+                'created_at' => $this->user->created_at?->format('Y-m-d H:i'),
+                'updated_at' => $this->user->updated_at?->format('Y-m-d H:i'),
+            ] : null),
             'created_at' => $this->created_at?->format('Y-m-d H:i'),
         ];
     }

@@ -26,6 +26,8 @@ class PresenceResource extends JsonResource
                 'id' => $this->formateur->id,
                 'name' => $this->formateur->name,
             ]),
+            'shared_with_admin' => $this->shared_with_admin,
+            'shared_at' => $this->shared_at?->format('Y-m-d H:i'),
             'created_at' => $this->created_at?->format('Y-m-d H:i'),
         ];
     }

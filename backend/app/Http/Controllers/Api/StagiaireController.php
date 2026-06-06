@@ -24,7 +24,7 @@ class StagiaireController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Stagiaire::with(['filiere', 'stage']);
+        $query = Stagiaire::with(['filiere', 'stage', 'user']);
         $user = $request->user();
 
         // Si l'utilisateur est un formateur, on filtre par ses groupes affectés
@@ -73,15 +73,16 @@ class StagiaireController extends Controller
 
         // Créer d'abord l'utilisateur pour l'authentification
         $user = User::create([
-            'name' => $data['prenom'] . ' ' . $data['nom'],
-            'email' => $data['email'],
-            'password' => Hash::make('password'), // Mot de passe par défaut
+            'name' => $data['account_name'] ?? ($data['prenom'] . ' ' . $data['nom']),
+            'email' => $data['account_email'] ?? $data['email'],
+            'password' => Hash::make($data['account_password'] ?? 'password'),
             'role' => 'stagiaire',
         ]);
 
+        unset($data['account_name'], $data['account_email'], $data['account_password']);
         $data['user_id'] = $user->id;
         $stagiaire = Stagiaire::create($data);
-        $stagiaire->load('filiere');
+        $stagiaire->load(['filiere', 'user']);
 
         return response()->json([
             'message' => 'Stagiaire créé avec succès.',
@@ -95,7 +96,7 @@ class StagiaireController extends Controller
      */
     public function show(string $id)
     {
-        $stagiaire = Stagiaire::with(['filiere', 'notes.module', 'presences.module', 'stage'])
+        $stagiaire = Stagiaire::with(['filiere', 'notes.module', 'presences.module', 'stage', 'user'])
             ->findOrFail($id);
 
         return new StagiaireResource($stagiaire);
@@ -119,8 +120,23 @@ class StagiaireController extends Controller
             $data['photo'] = $request->file('photo')->store('photos/stagiaires', 'public');
         }
 
+        $accountData = [
+            'name' => $data['account_name'] ?? (($data['prenom'] ?? $stagiaire->prenom) . ' ' . ($data['nom'] ?? $stagiaire->nom)),
+            'email' => $data['account_email'] ?? ($data['email'] ?? $stagiaire->email),
+        ];
+
+        if (!empty($data['account_password'])) {
+            $accountData['password'] = Hash::make($data['account_password']);
+        }
+
+        unset($data['account_name'], $data['account_email'], $data['account_password']);
         $stagiaire->update($data);
-        $stagiaire->load('filiere');
+
+        if ($stagiaire->user) {
+            $stagiaire->user->update($accountData);
+        }
+
+        $stagiaire->load(['filiere', 'user']);
 
         return response()->json([
             'message' => 'Stagiaire modifié avec succès.',

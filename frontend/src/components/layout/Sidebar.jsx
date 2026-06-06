@@ -46,7 +46,7 @@ const Sidebar = () => {
     { name: 'Stagiaires',       to: '/stagiaires',         icon: Users,           roles: ['admin', 'formateur', 'stagiaire'] },
     { name: 'Notes',            to: '/notes',              icon: BookOpen,        roles: ['admin', 'formateur'] },
     { name: 'Présences',        to: '/presences',          icon: CheckSquare,     roles: ['admin', 'formateur'] },
-    { name: 'Stages',           to: '/stages',             icon: Briefcase,       roles: ['admin'] },
+    { name: 'Stages',           to: '/stages',             icon: Briefcase,       roles: ['admin', 'formateur', 'stagiaire'] },
     { name: 'Paramètres',       to: '/settings',           icon: Settings,        roles: ['admin', 'formateur', 'stagiaire'] },
   ];
 

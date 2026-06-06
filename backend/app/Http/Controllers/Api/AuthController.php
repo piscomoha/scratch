@@ -9,20 +9,24 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     private function userPayload(User $user): array
     {
-        $user->loadMissing('stagiaire.filiere');
+        $user->loadMissing(['stagiaire.filiere', 'affectations.filiere']);
 
         return [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
+            'avatar' => $user->avatar ? url('storage/' . $user->avatar) : null,
+            'photo' => $user->avatar ? url('storage/' . $user->avatar) : null,
             'stagiaire' => $user->stagiaire ? new StagiaireResource($user->stagiaire) : null,
+            'affectations' => $user->affectations ?? [],
         ];
     }
 
@@ -135,32 +139,54 @@ class AuthController extends Controller
     public function updateProfile(Request $request): JsonResponse
     {
         $user = $request->user();
-        $stagiaireRule = $user->role === 'stagiaire' ? 'required' : 'nullable';
+        $stagiaireRule = 'nullable';
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
+            'avatar' => 'nullable|image|max:2048',
+            'photo' => 'nullable|image|max:2048',
             'filiere_id' => $stagiaireRule . '|exists:filieres,id',
             'groupe' => $stagiaireRule . '|string|max:20',
             'annee_formation' => $stagiaireRule . '|in:1,2',
         ]);
 
-        $user->update([
+        $userData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
-        ]);
+        ];
+
+        $avatarFile = $request->file('avatar') ?? $request->file('photo');
+        if ($avatarFile) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $userData['avatar'] = $avatarFile->store('photos/users', 'public');
+        }
+
+        $user->update($userData);
 
         if ($user->role === 'stagiaire') {
             $this->createStagiaireProfile($user);
             $parts = preg_split('/\s+/', trim($validated['name']), 2);
 
-            $user->stagiaire()->update([
+            $stagiaireData = [
                 'prenom' => $parts[0] ?: $validated['name'],
                 'nom' => $parts[1] ?? $parts[0] ?? $validated['name'],
                 'email' => $validated['email'],
                 'filiere_id' => $validated['filiere_id'],
-                'groupe' => strtoupper(trim($validated['groupe'])),
+                'groupe' => filled($validated['groupe'] ?? null) ? strtoupper(trim($validated['groupe'])) : null,
                 'annee_formation' => $validated['annee_formation'],
-            ]);
+            ];
+
+            if (isset($userData['avatar'])) {
+                $oldPhoto = $user->stagiaire?->photo;
+                if ($oldPhoto && $oldPhoto !== $userData['avatar']) {
+                    Storage::disk('public')->delete($oldPhoto);
+                }
+                $stagiaireData['photo'] = $userData['avatar'];
+            }
+
+            $user->stagiaire()->update($stagiaireData);
         }
 
         return response()->json([

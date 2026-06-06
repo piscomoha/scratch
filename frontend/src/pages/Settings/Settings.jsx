@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -48,6 +48,9 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const photoInputRef = useRef(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [profileForm, setProfileForm] = useState({
     name: '',
     email: '',
@@ -100,12 +103,31 @@ const Settings = () => {
     result.errors ? Object.values(result.errors).flat().join(', ') : result.message
   );
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
   const handleSaveProfile = async () => {
     setSavingProfile(true);
-    const result = await updateProfile(profileForm);
+    const payload = photoFile ? new FormData() : profileForm;
+
+    if (photoFile) {
+      Object.entries(profileForm).forEach(([key, value]) => {
+        payload.append(key, value ?? '');
+      });
+      payload.append('avatar', photoFile);
+    }
+
+    const result = await updateProfile(payload);
     setSavingProfile(false);
 
     if (result.success) {
+      setPhotoFile(null);
+      setPhotoPreview(null);
       notify('success', 'Profil enregistré', 'Vos informations ont été mises à jour.');
     } else {
       notify('error', 'Erreur', formatErrors(result));
@@ -198,14 +220,25 @@ const Settings = () => {
                     <div className="relative group">
                       <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary to-secondary p-[2px] shadow-2xl glow-primary">
                         <div className="h-full w-full rounded-[22px] bg-background flex items-center justify-center overflow-hidden">
-                          {user?.photo ? (
-                            <img src={user.photo} alt="" className="h-full w-full object-cover" />
+                          {photoPreview || user?.avatar || user?.photo ? (
+                            <img src={photoPreview || user?.avatar || user?.photo} alt="" className="h-full w-full object-cover" />
                           ) : (
                             <User size={40} className="text-400" />
                           )}
                         </div>
                       </div>
-                      <button className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
+                      <input
+                        ref={photoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={handlePhotoChange}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => photoInputRef.current?.click()}
+                        className="absolute -bottom-2 -right-2 p-2.5 bg-primary text-white rounded-xl shadow-lg hover:scale-110 transition-transform"
+                      >
                         <Camera size={16} />
                       </button>
                     </div>

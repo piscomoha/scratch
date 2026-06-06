@@ -81,6 +81,18 @@ export const useDashboardStats = () => {
       const { data } = await api.get('/dashboard/stats');
       return data.data;
     },
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+};
+
+export const usePresencesSummary = (filters = {}) => {
+  return useQuery({
+    queryKey: ['presences-summary', filters],
+    queryFn: async () => {
+      const { data } = await api.get('/presences/summary', { params: filters });
+      return data;
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
 };
 
@@ -170,3 +182,78 @@ export const useMarkAllNotificationsRead = () => {
     },
   });
 };
+
+// --- Stages ---
+export const useStages = (filters = {}, options = {}) => {
+  return useQuery({
+    queryKey: ['stages', filters],
+    queryFn: async () => {
+      const { data } = await api.get('/stages', { params: filters });
+      return data;
+    },
+    ...options,
+  });
+};
+
+export const useMyStage = () => {
+  return useQuery({
+    queryKey: ['my-stage'],
+    queryFn: async () => {
+      const { data } = await api.get('/stages/my-stage');
+      return data.data;
+    },
+  });
+};
+
+export const useCreateStage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (newStage) => {
+      const { data } = await api.post('/stages', newStage);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stages'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    },
+  });
+};
+
+export const useUpdateStage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...payload }) => {
+      const { data } = await api.put(`/stages/${id}`, payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stages'] });
+      queryClient.invalidateQueries({ queryKey: ['my-stage'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    },
+  });
+};
+
+export const useSubmitStageForm = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload) => {
+      const { data } = await api.post('/stages/submit-form', payload);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stages'] });
+      queryClient.invalidateQueries({ queryKey: ['my-stage'] });
+    },
+  });
+};
+
+export const useCheckStageNotifications = () => {
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post('/stages/check-notifications');
+      return data;
+    },
+  });
+};
+
